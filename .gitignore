@@ -1,0 +1,63 @@
+# --- Go build ---
+/bin/
+/build/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# --- Go tools ---
+*.coverprofile
+*.testresult
+coverage.out
+
+# --- Dependency vendoring ---
+/vendor/
+
+# --- OS generated ---
+.DS_Store
+Thumbs.db
+
+# --- Editor configs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- SQLite / DB files ---
+*.sqlite
+*.db
+*.bak
+secretly.db
+
+# --- Encryption keys ---
+keys/
+*.key
+*.pem
+
+# --- Local config ---
+config.yaml
+*.local.yaml
+
+# --- Telemetry & logs ---
+telemetry/
+*.log
+
+# --- CLI artifacts ---
+.env
+.secretly_history
+.secretly_cache
+
+# --- CI/CD cache or outputs ---
+.cache/
+output/
+artifacts/
+
+# --- Temporary files ---
+*.tmp
+*.temp
+*~
