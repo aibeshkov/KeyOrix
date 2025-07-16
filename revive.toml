@@ -1,0 +1,44 @@
+ignoreGeneratedHeader = true
+
+[revive]
+# Severity levels: error, warning, info
+severity = "warning"
+
+[revive.rules]
+# Enforce consistent comments on exported functions/types
+- name: exported
+  arguments: ["strict"]
+
+# Avoid unused variables and imports
+- name: unused
+
+# Enforce naming conventions
+- name: naming
+
+# Check for code simplifications
+- name: indent-error-flow
+
+# Warn on use of naked returns (return without explicit values)
+- name: naked-return
+
+# Ensure error strings start with lowercase
+- name: error-strings
+
+# Enforce that error return values are checked
+- name: error-check
+
+# Avoid deep nesting
+- name: nest-if
+
+# Warn about variables that shadow others
+- name: var-naming
+
+# Encourage use of switch instead of if-else chains
+- name: switch-case
+
+# Warn on too many parameters in functions
+- name: parameter-limit
+  arguments: [5]
+
+# Enforce commenting of package-level variables/constants
+- name: comment-exported

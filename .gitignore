@@ -61,3 +61,14 @@ artifacts/
 *.tmp
 *.temp
 *~
+
+add.sh
+*.sh~
+*.sh.bak
+*.sh.tmp
+*.sh
+*.zip
+*.tpl
+secretly
+secretly.yaml
+

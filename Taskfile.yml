@@ -1,0 +1,50 @@
+version: '3'
+
+tasks:
+  fmt:
+    desc: "Format Go code"
+    cmds:
+      - go fmt ./...
+    silent: true
+
+  vet:
+    desc: "Run go vet"
+    cmds:
+      - go vet ./...
+    silent: true
+
+  lint:
+    desc: "Run golangci-lint"
+    cmds:
+      - |
+        if command -v golangci-lint >/dev/null 2>&1; then
+          golangci-lint run
+        else
+          echo "golangci-lint not installed, skipping lint"
+        fi
+    silent: true
+
+  gosec:
+    desc: "Run gosec security checks"
+    cmds:
+      - |
+        if command -v gosec >/dev/null 2>&1; then
+          gosec ./...
+        else
+          echo "gosec not installed, skipping security checks"
+        fi
+    silent: true
+
+  test:
+    desc: "Run tests"
+    cmds:
+      - go test ./... -short
+    silent: true
+
+  build:
+    desc: "Run all checks and build binary"
+    deps: [fmt, vet, lint, gosec, test]
+    cmds:
+      - VERSION=$(git describe --tags --always --dirty || echo "dev")
+      - echo "Building version $VERSION..."
+      - go build -ldflags "-X github.com/secretlyhq/secretly/cmd/root.version=$VERSION" -o ./secretly ./cmd/secretly
