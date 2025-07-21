@@ -1,4 +1,4 @@
--- 🌐 Справочники: неймспейсы, зоны, окружения
+-- 🌐 Reference tables: namespaces, zones, environments
 
 CREATE TABLE namespaces (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,7 +21,7 @@ CREATE TABLE environments (
   name TEXT NOT NULL UNIQUE
 );
 
--- 🔐 Секреты и версии
+-- 🔐 Secrets and versions
 
 CREATE TABLE secret_nodes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,7 +71,7 @@ CREATE TABLE secret_metadata_history (
   new_metadata TEXT
 );
 
--- 🧑‍💻 Пользователи, роли, группы
+-- 🧑‍💻 Users, roles, groups
 
 CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,7 +113,7 @@ CREATE TABLE group_roles (
   PRIMARY KEY (group_id, role_id, namespace_id)
 );
 
--- 🛡️ Аутентификация
+-- 🛡️ Authentication
 
 CREATE TABLE sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -131,7 +131,7 @@ CREATE TABLE password_resets (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 🏷️ Теги
+-- 🏷️ Tags
 
 CREATE TABLE tags (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -144,7 +144,7 @@ CREATE TABLE secret_tags (
   PRIMARY KEY (secret_node_id, tag_id)
 );
 
--- 📬 Уведомления
+-- 📬 Notifications
 
 CREATE TABLE notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -165,7 +165,7 @@ CREATE TABLE audit_events (
   event_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ⚙️ Настройки
+-- ⚙️ Settings
 
 CREATE TABLE settings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -181,7 +181,7 @@ CREATE TABLE system_metadata (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 🔐 API и интеграции
+-- 🔐 API and integrations
 
 CREATE TABLE api_clients (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

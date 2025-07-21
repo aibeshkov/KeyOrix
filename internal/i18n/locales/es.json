@@ -1,0 +1,437 @@
+{
+    "Welcome": {
+        "description": "Welcome message",
+        "one": "¡Bienvenido a Secretly!",
+        "other": "¡Bienvenido a Secretly!"
+    },
+    "Goodbye": {
+        "description": "Goodbye message",
+        "one": "¡Adiós!",
+        "other": "¡Adiós!"
+    },
+    "ErrorUserNotFound": {
+        "description": "Error message when user is not found",
+        "one": "Usuario no encontrado",
+        "other": "Usuario no encontrado"
+    },
+    "ErrorInvalidCredentials": {
+        "description": "Error message for invalid credentials",
+        "one": "Credenciales inválidas",
+        "other": "Credenciales inválidas"
+    },
+    "ErrorUnauthorized": {
+        "description": "Error message for unauthorized access",
+        "one": "Acceso no autorizado",
+        "other": "Acceso no autorizado"
+    },
+    "ErrorForbidden": {
+        "description": "Error message for forbidden access",
+        "one": "Acceso prohibido",
+        "other": "Acceso prohibido"
+    },
+    "ErrorInternalServer": {
+        "description": "Error message for internal server error",
+        "one": "Error interno del servidor",
+        "other": "Error interno del servidor"
+    },
+    "ErrorBadRequest": {
+        "description": "Error message for bad request",
+        "one": "Solicitud incorrecta",
+        "other": "Solicitud incorrecta"
+    },
+    "ErrorNotFound": {
+        "description": "Error message for resource not found",
+        "one": "Recurso no encontrado",
+        "other": "Recurso no encontrado"
+    },
+    "ErrorValidation": {
+        "description": "Error message for validation error",
+        "one": "Error de validación",
+        "other": "Error de validación"
+    },
+    "ErrorDatabaseConnection": {
+        "description": "Error message for database connection error",
+        "one": "Error de conexión a la base de datos",
+        "other": "Error de conexión a la base de datos"
+    },
+    "ErrorSecretNotFound": {
+        "description": "Error message when secret is not found",
+        "one": "Secreto no encontrado",
+        "other": "Secreto no encontrado"
+    },
+    "ErrorSecretExpired": {
+        "description": "Error message when secret has expired",
+        "one": "El secreto ha expirado",
+        "other": "El secreto ha expirado"
+    },
+    "ErrorSecretMaxReads": {
+        "description": "Error message when secret has reached max reads",
+        "one": "El secreto ha alcanzado el número máximo de lecturas",
+        "other": "El secreto ha alcanzado el número máximo de lecturas"
+    },
+    "ErrorInvalidSecretFormat": {
+        "description": "Error message for invalid secret format",
+        "one": "Formato de secreto inválido",
+        "other": "Formato de secreto inválido"
+    },
+    "ErrorEncryptionFailed": {
+        "description": "Error message when encryption fails",
+        "one": "Error de cifrado",
+        "other": "Error de cifrado"
+    },
+    "ErrorDecryptionFailed": {
+        "description": "Error message when decryption fails",
+        "one": "Error de descifrado",
+        "other": "Error de descifrado"
+    },
+    "ErrorInitializationFailed": {
+        "description": "Error message when initialization fails",
+        "one": "Error de inicialización",
+        "other": "Error de inicialización"
+    },
+    "ErrorTokenGeneration": {
+        "description": "Error message when token generation fails",
+        "one": "Error de generación de token",
+        "other": "Error de generación de token"
+    },
+    "ErrorStorageFailed": {
+        "description": "Error message when storage operation fails",
+        "one": "Error de almacenamiento",
+        "other": "Error de almacenamiento"
+    },
+    "ErrorRetrievalFailed": {
+        "description": "Error message when retrieval operation fails",
+        "one": "Error de recuperación",
+        "other": "Error de recuperación"
+    },
+    "ErrorCleanupFailed": {
+        "description": "Error message when cleanup operation fails",
+        "one": "Error de limpieza",
+        "other": "Error de limpieza"
+    },
+    "ErrorRoleNotFound": {
+        "description": "Error message when role is not found",
+        "one": "Rol no encontrado",
+        "other": "Rol no encontrado"
+    },
+    "ErrorRoleAlreadyAssigned": {
+        "description": "Error message when role is already assigned",
+        "one": "Rol ya asignado",
+        "other": "Rol ya asignado"
+    },
+    "ErrorRoleNotAssigned": {
+        "description": "Error message when role is not assigned",
+        "one": "Rol no asignado",
+        "other": "Rol no asignado"
+    },
+    "ErrorSecretAlreadyExists": {
+        "description": "Error message when secret already exists",
+        "one": "El secreto ya existe",
+        "other": "El secreto ya existe"
+    },
+    "ErrorInvalidResetToken": {
+        "description": "Error message for invalid or expired password reset token",
+        "one": "Token de restablecimiento de contraseña inválido o expirado",
+        "other": "Token de restablecimiento de contraseña inválido o expirado"
+    },
+    "ErrorRequiredField": {
+        "description": "Error message for required field validation",
+        "one": "Campo requerido",
+        "other": "Campo requerido"
+    },
+    "SuccessSecretCreated": {
+        "description": "Success message for secret creation",
+        "one": "Secreto creado con éxito",
+        "other": "Secreto creado con éxito"
+    },
+    "SuccessSecretUpdated": {
+        "description": "Success message for secret update",
+        "one": "Secreto actualizado con éxito",
+        "other": "Secreto actualizado con éxito"
+    },
+    "SuccessSecretDeleted": {
+        "description": "Success message for secret deletion",
+        "one": "Secreto eliminado con éxito",
+        "other": "Secreto eliminado con éxito"
+    },
+    "SuccessUserCreated": {
+        "description": "Success message for user creation",
+        "one": "Usuario creado con éxito",
+        "other": "Usuario creado con éxito"
+    },
+    "SuccessUserUpdated": {
+        "description": "Success message for user update",
+        "one": "Usuario actualizado con éxito",
+        "other": "Usuario actualizado con éxito"
+    },
+    "SuccessLoginSuccessful": {
+        "description": "Success message for successful login",
+        "one": "Inicio de sesión exitoso",
+        "other": "Inicio de sesión exitoso"
+    },
+    "SuccessLogoutSuccessful": {
+        "description": "Success message for successful logout",
+        "one": "Cierre de sesión exitoso",
+        "other": "Cierre de sesión exitoso"
+    },
+    "InfoSecretExpired": {
+        "description": "Info message for expired secret",
+        "one": "Este secreto ha expirado",
+        "other": "Este secreto ha expirado"
+    },
+    "InfoSecretMaxReads": {
+        "description": "Info message for secret max reads reached",
+        "one": "Este secreto ha alcanzado su número máximo de lecturas",
+        "other": "Este secreto ha alcanzado su número máximo de lecturas"
+    },
+    "InfoSystemInitialized": {
+        "description": "Info message when system is initialized",
+        "one": "Sistema inicializado con éxito",
+        "other": "Sistema inicializado con éxito"
+    },
+    "InfoDatabaseMigrated": {
+        "description": "Info message when database is migrated",
+        "one": "Base de datos migrada con éxito",
+        "other": "Base de datos migrada con éxito"
+    },
+    "LabelName": {
+        "description": "Label for name field",
+        "one": "Nombre",
+        "other": "Nombre"
+    },
+    "LabelValue": {
+        "description": "Label for value field",
+        "one": "Valor",
+        "other": "Valor"
+    },
+    "LabelNamespace": {
+        "description": "Label for namespace field",
+        "one": "Espacio de nombres",
+        "other": "Espacio de nombres"
+    },
+    "LabelZone": {
+        "description": "Label for zone field",
+        "one": "Zona",
+        "other": "Zona"
+    },
+    "LabelEnvironment": {
+        "description": "Label for environment field",
+        "one": "Entorno",
+        "other": "Entorno"
+    },
+    "LabelType": {
+        "description": "Label for type field",
+        "one": "Tipo",
+        "other": "Tipo"
+    },
+    "LabelMaxReads": {
+        "description": "Label for max reads field",
+        "one": "Lecturas máximas",
+        "other": "Lecturas máximas"
+    },
+    "LabelExpiration": {
+        "description": "Label for expiration field",
+        "one": "Expiración",
+        "other": "Expiración"
+    },
+    "LabelMetadata": {
+        "description": "Label for metadata field",
+        "one": "Metadatos",
+        "other": "Metadatos"
+    },
+    "LabelTags": {
+        "description": "Label for tags field",
+        "one": "Etiquetas",
+        "other": "Etiquetas"
+    },
+    "LabelUsername": {
+        "description": "Label for username field",
+        "one": "Nombre de usuario",
+        "other": "Nombre de usuario"
+    },
+    "LabelPassword": {
+        "description": "Label for password field",
+        "one": "Contraseña",
+        "other": "Contraseña"
+    },
+    "LabelEmail": {
+        "description": "Label for email field",
+        "one": "Correo electrónico",
+        "other": "Correo electrónico"
+    },
+    "LabelRole": {
+        "description": "Label for role field",
+        "one": "Rol",
+        "other": "Rol"
+    },
+    "LabelPermissions": {
+        "description": "Label for permissions field",
+        "one": "Permisos",
+        "other": "Permisos"
+    },
+    "ButtonCreate": {
+        "description": "Button text for create action",
+        "one": "Crear",
+        "other": "Crear"
+    },
+    "ButtonUpdate": {
+        "description": "Button text for update action",
+        "one": "Actualizar",
+        "other": "Actualizar"
+    },
+    "ButtonDelete": {
+        "description": "Button text for delete action",
+        "one": "Eliminar",
+        "other": "Eliminar"
+    },
+    "ButtonCancel": {
+        "description": "Button text for cancel action",
+        "one": "Cancelar",
+        "other": "Cancelar"
+    },
+    "ButtonSave": {
+        "description": "Button text for save action",
+        "one": "Guardar",
+        "other": "Guardar"
+    },
+    "ButtonClose": {
+        "description": "Button text for close action",
+        "one": "Cerrar",
+        "other": "Cerrar"
+    },
+    "ButtonConfirm": {
+        "description": "Button text for confirm action",
+        "one": "Confirmar",
+        "other": "Confirmar"
+    },
+    "ButtonBack": {
+        "description": "Button text for back action",
+        "one": "Atrás",
+        "other": "Atrás"
+    },
+    "ButtonNext": {
+        "description": "Button text for next action",
+        "one": "Siguiente",
+        "other": "Siguiente"
+    },
+    "ButtonPrevious": {
+        "description": "Button text for previous action",
+        "one": "Anterior",
+        "other": "Anterior"
+    },
+    "ButtonSubmit": {
+        "description": "Button text for submit action",
+        "one": "Enviar",
+        "other": "Enviar"
+    },
+    "ButtonReset": {
+        "description": "Button text for reset action",
+        "one": "Restablecer",
+        "other": "Restablecer"
+    },
+    "ButtonSearch": {
+        "description": "Button text for search action",
+        "one": "Buscar",
+        "other": "Buscar"
+    },
+    "ButtonFilter": {
+        "description": "Button text for filter action",
+        "one": "Filtrar",
+        "other": "Filtrar"
+    },
+    "ButtonClear": {
+        "description": "Button text for clear action",
+        "one": "Limpiar",
+        "other": "Limpiar"
+    },
+    "ButtonApply": {
+        "description": "Button text for apply action",
+        "one": "Aplicar",
+        "other": "Aplicar"
+    },
+    "ButtonLogin": {
+        "description": "Button text for login action",
+        "one": "Iniciar sesión",
+        "other": "Iniciar sesión"
+    },
+    "ButtonLogout": {
+        "description": "Button text for logout action",
+        "one": "Cerrar sesión",
+        "other": "Cerrar sesión"
+    },
+    "ButtonRegister": {
+        "description": "Button text for register action",
+        "one": "Registrarse",
+        "other": "Registrarse"
+    },
+    "ButtonDownload": {
+        "description": "Button text for download action",
+        "one": "Descargar",
+        "other": "Descargar"
+    },
+    "ButtonUpload": {
+        "description": "Button text for upload action",
+        "one": "Subir",
+        "other": "Subir"
+    },
+    "ButtonImport": {
+        "description": "Button text for import action",
+        "one": "Importar",
+        "other": "Importar"
+    },
+    "ButtonExport": {
+        "description": "Button text for export action",
+        "one": "Exportar",
+        "other": "Exportar"
+    },
+    "ButtonRefresh": {
+        "description": "Button text for refresh action",
+        "one": "Actualizar",
+        "other": "Actualizar"
+    },
+    "ButtonCopy": {
+        "description": "Button text for copy action",
+        "one": "Copiar",
+        "other": "Copiar"
+    },
+    "ButtonEdit": {
+        "description": "Button text for edit action",
+        "one": "Editar",
+        "other": "Editar"
+    },
+    "ButtonView": {
+        "description": "Button text for view action",
+        "one": "Ver",
+        "other": "Ver"
+    },
+    "ButtonAdd": {
+        "description": "Button text for add action",
+        "one": "Añadir",
+        "other": "Añadir"
+    },
+    "ButtonRemove": {
+        "description": "Button text for remove action",
+        "one": "Eliminar",
+        "other": "Eliminar"
+    },
+    "ButtonEnable": {
+        "description": "Button text for enable action",
+        "one": "Habilitar",
+        "other": "Habilitar"
+    },
+    "ButtonDisable": {
+        "description": "Button text for disable action",
+        "one": "Deshabilitar",
+        "other": "Deshabilitar"
+    },
+    "ButtonValidate": {
+        "description": "Button text for validate action",
+        "one": "Validar",
+        "other": "Validar"
+    },
+    "ButtonStatus": {
+        "description": "Button text for status action",
+        "one": "Estado",
+        "other": "Estado"
+    }
+}

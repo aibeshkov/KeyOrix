@@ -17,13 +17,13 @@ var FilePermsCmd = &cobra.Command{
 	Short: "Manage critical file permissions",
 }
 
-// FilePermSpec описывает файл и требуемые права и владельца
+// FilePermSpec describes a file and its required permissions and ownership
 type FilePermSpec struct {
 	Path string
-	Mode os.FileMode // например 0600
+	Mode os.FileMode // e.g., 0600
 }
 
-// isPathInsideBase проверяет, что targetPath находится внутри baseDir
+// isPathInsideBase ensures that targetPath is inside baseDir
 func isPathInsideBase(baseDir, targetPath string) (bool, error) {
 	absBase, err := filepath.Abs(baseDir)
 	if err != nil {
@@ -38,10 +38,9 @@ func isPathInsideBase(baseDir, targetPath string) (bool, error) {
 	return absTarget == absBase || strings.HasPrefix(absTarget, baseWithSlash), nil
 }
 
-// SafeReadFile читает файл, если он находится в baseDir.
-// Если путь вне baseDir — возвращает ошибку.
+// SafeReadFile reads a file if it is inside the specified baseDir.
+// Returns an error if the file is outside the baseDir.
 func SafeReadFile(baseDir, filePath string) ([]byte, error) {
-	// Используем filepath.Clean для нормализации пути
 	cleanPath := filepath.Clean(filePath)
 
 	ok, err := isPathInsideBase(baseDir, cleanPath)
@@ -51,13 +50,12 @@ func SafeReadFile(baseDir, filePath string) ([]byte, error) {
 	if !ok {
 		return nil, fmt.Errorf("access denied: file %q is outside of %q", cleanPath, baseDir)
 	}
-	// Безопасный вызов ReadFile только после проверки пути
+
 	return os.ReadFile(cleanPath)
 }
 
-// SecureWriteFile записывает файл с правами perm, если путь в baseDir
+// SecureWriteFile writes data to a file with the given permissions, only if the path is within baseDir.
 func SecureWriteFile(baseDir, path string, data []byte, perm os.FileMode) error {
-	// Используем filepath.Clean для нормализации пути
 	cleanPath := filepath.Clean(path)
 
 	ok, err := isPathInsideBase(baseDir, cleanPath)
@@ -67,12 +65,12 @@ func SecureWriteFile(baseDir, path string, data []byte, perm os.FileMode) error 
 	if !ok {
 		return fmt.Errorf("access denied: file %q is outside of %q", cleanPath, baseDir)
 	}
-	// Безопасный вызов WriteFile только после проверки пути
+
 	return os.WriteFile(cleanPath, data, perm)
 }
 
-// FixFilePerms проверяет права и владельца файлов.
-// Если autofix=true — исправляет несоответствия.
+// FixFilePerms verifies file permissions and ownership.
+// If autofix=true, it will attempt to correct any mismatches.
 func FixFilePerms(files []FilePermSpec, autofix bool) error {
 	currentUser, err := user.Current()
 	if err != nil {
@@ -90,7 +88,7 @@ func FixFilePerms(files []FilePermSpec, autofix bool) error {
 			continue
 		}
 
-		// Проверка прав доступа
+		// Check permissions
 		actualMode := info.Mode().Perm()
 		if actualMode != f.Mode {
 			msg := fmt.Sprintf("File %s has mode %o but expected %o", f.Path, actualMode, f.Mode)
@@ -107,7 +105,7 @@ func FixFilePerms(files []FilePermSpec, autofix bool) error {
 			}
 		}
 
-		// Проверка владельца
+		// Check ownership
 		stat, ok := info.Sys().(*syscall.Stat_t)
 		if !ok {
 			fmt.Printf("[WARN] Cannot get stat_t for %s\n", f.Path)

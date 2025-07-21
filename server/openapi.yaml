@@ -1,0 +1,702 @@
+openapi: 3.0.3
+info:
+  title: Secretly API
+  description: |
+    Secure secrets management API with RBAC, audit logging, and comprehensive secret lifecycle management.
+    
+    ## Authentication
+    All API endpoints (except health check) require Bearer token authentication.
+    Include the token in the Authorization header: `Authorization: Bearer <token>`
+    
+    ## Rate Limiting
+    API requests are rate limited. Check response headers for current limits.
+    
+    ## Versioning
+    This API uses URL versioning. Current version is v1: `/api/v1/`
+  version: 1.0.0
+  contact:
+    name: Secretly Team
+    email: support@secretly.dev
+    url: https://secretly.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: /api/v1
+    description: API v1
+  - url: https://api.secretly.dev/v1
+    description: Production server
+  - url: https://staging-api.secretly.dev/v1
+    description: Staging server
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    # Secret schemas
+    Secret:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the secret
+          example: 1
+        name:
+          type: string
+          description: Name of the secret
+          example: "database-password"
+        namespace:
+          type: string
+          description: Namespace the secret belongs to
+          example: "production"
+        zone:
+          type: string
+          description: Zone where the secret is stored
+          example: "us-east-1"
+        environment:
+          type: string
+          description: Environment the secret is used in
+          example: "production"
+        type:
+          type: string
+          description: Type of the secret
+          example: "password"
+        max_reads:
+          type: integer
+          nullable: true
+          description: Maximum number of times the secret can be read
+          example: 10
+        expiration:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the secret expires
+          example: "2025-12-31T23:59:59Z"
+        metadata:
+          type: object
+          description: Additional metadata for the secret
+          example: {"owner": "team-backend", "project": "api"}
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the secret
+          example: ["database", "production", "critical"]
+        created_by:
+          type: string
+          description: User who created the secret
+          example: "admin@example.com"
+        created_at:
+          type: string
+          format: date-time
+          description: When the secret was created
+          example: "2025-01-17T14:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the secret was last updated
+          example: "2025-01-17T14:30:00Z"
+
+    SecretRequest:
+      type: object
+      required: [name, value, namespace, zone, environment]
+      properties:
+        name:
+          type: string
+          description: Name of the secret
+          example: "database-password"
+        value:
+          type: string
+          description: The secret value (will be encrypted)
+          example: "super-secret-password"
+        namespace:
+          type: string
+          description: Namespace the secret belongs to
+          example: "production"
+        zone:
+          type: string
+          description: Zone where the secret should be stored
+          example: "us-east-1"
+        environment:
+          type: string
+          description: Environment the secret is used in
+          example: "production"
+        type:
+          type: string
+          description: Type of the secret
+          example: "password"
+        max_reads:
+          type: integer
+          description: Maximum number of times the secret can be read
+          example: 10
+        expiration:
+          type: string
+          format: date-time
+          description: When the secret should expire
+          example: "2025-12-31T23:59:59Z"
+        metadata:
+          type: object
+          description: Additional metadata for the secret
+          example: {"owner": "team-backend", "project": "api"}
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags to associate with the secret
+          example: ["database", "production", "critical"]
+
+    SecretValue:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the secret
+          example: 1
+        name:
+          type: string
+          description: Name of the secret
+          example: "database-password"
+        value:
+          type: string
+          description: The decrypted secret value
+          example: "super-secret-password"
+        version_number:
+          type: integer
+          description: Version number of the secret
+          example: 1
+        read_count:
+          type: integer
+          description: Number of times this version has been read
+          example: 5
+
+    # User schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the user
+          example: 1
+        username:
+          type: string
+          description: Username
+          example: "admin"
+        email:
+          type: string
+          format: email
+          description: Email address
+          example: "admin@example.com"
+        created_at:
+          type: string
+          format: date-time
+          description: When the user was created
+          example: "2025-01-17T14:30:00Z"
+
+    UserRequest:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+          description: Username
+          example: "newuser"
+        email:
+          type: string
+          format: email
+          description: Email address
+          example: "newuser@example.com"
+        password:
+          type: string
+          minLength: 8
+          description: Password (minimum 8 characters)
+          example: "securepassword123"
+
+    # Role schemas
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the role
+          example: 1
+        name:
+          type: string
+          description: Role name
+          example: "admin"
+        description:
+          type: string
+          description: Role description
+          example: "Administrator role with full access"
+
+    RoleRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Role name
+          example: "editor"
+        description:
+          type: string
+          description: Role description
+          example: "Editor role with read/write access"
+
+    UserRoleRequest:
+      type: object
+      required: [user_id, role_id]
+      properties:
+        user_id:
+          type: integer
+          description: User ID
+          example: 1
+        role_id:
+          type: integer
+          description: Role ID
+          example: 2
+        namespace_id:
+          type: integer
+          nullable: true
+          description: Optional namespace ID for scoped role assignment
+          example: 1
+
+    # Audit schemas
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the audit log entry
+          example: 1
+        event_type:
+          type: string
+          description: Type of event
+          example: "SECRET_READ"
+        user_id:
+          type: integer
+          nullable: true
+          description: ID of the user who performed the action
+          example: 1
+        secret_id:
+          type: integer
+          nullable: true
+          description: ID of the secret involved in the action
+          example: 1
+        description:
+          type: string
+          description: Description of the event
+          example: "Secret accessed via API"
+        event_time:
+          type: string
+          format: date-time
+          description: When the event occurred
+          example: "2025-01-17T14:30:00Z"
+        ip_address:
+          type: string
+          description: IP address of the client
+          example: "192.168.1.100"
+        user_agent:
+          type: string
+          description: User agent of the client
+          example: "curl/7.68.0"
+
+    # System schemas
+    SystemInfo:
+      type: object
+      properties:
+        version:
+          type: string
+          description: Application version
+          example: "1.0.0"
+        build_time:
+          type: string
+          format: date-time
+          description: When the application was built
+          example: "2025-01-17T14:30:00Z"
+        go_version:
+          type: string
+          description: Go version used to build the application
+          example: "go1.21.0"
+        platform:
+          type: string
+          description: Platform the application is running on
+          example: "linux/amd64"
+        uptime:
+          type: string
+          description: How long the application has been running
+          example: "2h30m15s"
+        environment:
+          type: string
+          description: Environment the application is running in
+          example: "production"
+        features:
+          type: object
+          description: Enabled features
+          example: {"rbac": true, "audit_logging": true, "encryption": true}
+
+    # Common schemas
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request is invalid"
+        code:
+          type: integer
+          description: HTTP status code
+          example: 400
+        details:
+          type: object
+          description: Additional error details
+          example: {"field": "name", "issue": "required"}
+
+    PaginatedResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+          example: 100
+        page:
+          type: integer
+          description: Current page number
+          example: 1
+        page_size:
+          type: integer
+          description: Number of items per page
+          example: 20
+        total_pages:
+          type: integer
+          description: Total number of pages
+          example: 5
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number for pagination
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+
+    PageSizeParam:
+      name: page_size
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+
+    NamespaceParam:
+      name: namespace
+      in: query
+      description: Filter by namespace
+      schema:
+        type: string
+      example: "production"
+
+    ZoneParam:
+      name: zone
+      in: query
+      description: Filter by zone
+      schema:
+        type: string
+      example: "us-east-1"
+
+    EnvironmentParam:
+      name: environment
+      in: query
+      description: Filter by environment
+      schema:
+        type: string
+      example: "production"
+
+  responses:
+    UnauthorizedError:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized"
+            message: "Authentication required"
+            code: 401
+
+    ForbiddenError:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Forbidden"
+            message: "Insufficient permissions"
+            code: 403
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "NotFound"
+            message: "Resource not found"
+            code: 404
+
+    ValidationError:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "ValidationError"
+            message: "Invalid request data"
+            code: 400
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Check if the service is healthy
+      security: []
+      tags: [System]
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-17T14:30:00Z"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  services:
+                    type: object
+                    example: {"database": "healthy", "encryption": "healthy"}
+
+  /secrets:
+    get:
+      summary: List secrets
+      description: Retrieve a paginated list of secrets with optional filtering
+      tags: [Secrets]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - $ref: '#/components/parameters/NamespaceParam'
+        - $ref: '#/components/parameters/ZoneParam'
+        - $ref: '#/components/parameters/EnvironmentParam'
+      responses:
+        '200':
+          description: List of secrets
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      secrets:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Secret'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      summary: Create secret
+      description: Create a new secret
+      tags: [Secrets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecretRequest'
+      responses:
+        '201':
+          description: Secret created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secret'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /secrets/{id}:
+    get:
+      summary: Get secret
+      description: Retrieve a secret by ID, optionally including the decrypted value
+      tags: [Secrets]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID
+          schema:
+            type: integer
+          example: 1
+        - name: include_value
+          in: query
+          description: Whether to include the decrypted secret value
+          schema:
+            type: boolean
+            default: false
+          example: true
+      responses:
+        '200':
+          description: Secret details
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Secret'
+                  - $ref: '#/components/schemas/SecretValue'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      summary: Update secret
+      description: Update an existing secret
+      tags: [Secrets]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecretRequest'
+      responses:
+        '200':
+          description: Secret updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secret'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      summary: Delete secret
+      description: Delete a secret
+      tags: [Secrets]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '204':
+          description: Secret deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /secrets/{id}/versions:
+    get:
+      summary: Get secret versions
+      description: Retrieve all versions of a secret
+      tags: [Secrets]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Secret versions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        version_number:
+                          type: integer
+                        created_at:
+                          type: string
+                          format: date-time
+                        read_count:
+                          type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+tags:
+  - name: System
+    description: System health and information endpoints
+  - name: Secrets
+    description: Secret management operations
+  - name: Users
+    description: User management operations (RBAC)
+  - name: Roles
+    description: Role management operations (RBAC)
+  - name: Audit
+    description: Audit log operations

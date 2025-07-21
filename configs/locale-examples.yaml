@@ -1,0 +1,59 @@
+# Locale Configuration Examples for Secretly
+# This file contains various examples of locale configuration for different use cases
+
+# Example 1: English-only deployment (default)
+# Most common configuration for English-speaking environments
+locale_english_only:
+  language: "en"
+  fallback_language: "en"
+
+# Example 2: Russian primary with English fallback
+# Suitable for Russian-speaking teams with English as backup
+locale_russian_primary:
+  language: "ru"
+  fallback_language: "en"
+
+# Example 3: Spanish primary with English fallback
+# Suitable for Spanish-speaking teams with English as backup
+locale_spanish_primary:
+  language: "es"
+  fallback_language: "en"
+
+# Example 4: French primary with English fallback
+# Suitable for French-speaking teams with English as backup
+locale_french_primary:
+  language: "fr"
+  fallback_language: "en"
+
+# Example 5: German primary with English fallback
+# Suitable for German-speaking teams with English as backup
+locale_german_primary:
+  language: "de"
+  fallback_language: "en"
+
+# Example 6: Multi-regional deployment with Spanish primary and French fallback
+# For organizations operating in multiple non-English regions
+locale_multi_regional:
+  language: "es"
+  fallback_language: "fr"
+
+# Supported Language Codes:
+# - en: English (default, most complete translations)
+# - ru: Russian (Русский)
+# - es: Spanish (Español)
+# - fr: French (Français)
+# - de: German (Deutsch)
+
+# Configuration Notes:
+# 1. The 'language' field sets the primary language for all user-facing text
+# 2. The 'fallback_language' is used when a translation is missing in the primary language
+# 3. English ("en") is recommended as fallback_language for maximum compatibility
+# 4. Both fields are required and must be valid language codes
+# 5. Invalid language codes will cause the application to fail startup validation
+
+# Integration with secretly.yaml:
+# Copy the desired locale configuration block to your secretly.yaml file under the 'locale:' section
+# Example:
+# locale:
+#   language: "ru"
+#   fallback_language: "en"

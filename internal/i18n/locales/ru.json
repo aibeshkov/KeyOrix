@@ -1,0 +1,437 @@
+{
+    "Welcome": {
+        "description": "Welcome message",
+        "one": "Добро пожаловать в Secretly!",
+        "other": "Добро пожаловать в Secretly!"
+    },
+    "Goodbye": {
+        "description": "Goodbye message",
+        "one": "До свидания!",
+        "other": "До свидания!"
+    },
+    "ErrorUserNotFound": {
+        "description": "Error message when user is not found",
+        "one": "Пользователь не найден",
+        "other": "Пользователь не найден"
+    },
+    "ErrorInvalidCredentials": {
+        "description": "Error message for invalid credentials",
+        "one": "Неверные учетные данные",
+        "other": "Неверные учетные данные"
+    },
+    "ErrorUnauthorized": {
+        "description": "Error message for unauthorized access",
+        "one": "Неавторизованный доступ",
+        "other": "Неавторизованный доступ"
+    },
+    "ErrorForbidden": {
+        "description": "Error message for forbidden access",
+        "one": "Доступ запрещен",
+        "other": "Доступ запрещен"
+    },
+    "ErrorInternalServer": {
+        "description": "Error message for internal server error",
+        "one": "Внутренняя ошибка сервера",
+        "other": "Внутренняя ошибка сервера"
+    },
+    "ErrorBadRequest": {
+        "description": "Error message for bad request",
+        "one": "Неверный запрос",
+        "other": "Неверный запрос"
+    },
+    "ErrorNotFound": {
+        "description": "Error message for resource not found",
+        "one": "Ресурс не найден",
+        "other": "Ресурс не найден"
+    },
+    "ErrorValidation": {
+        "description": "Error message for validation error",
+        "one": "Ошибка валидации",
+        "other": "Ошибка валидации"
+    },
+    "ErrorDatabaseConnection": {
+        "description": "Error message for database connection error",
+        "one": "Ошибка подключения к базе данных",
+        "other": "Ошибка подключения к базе данных"
+    },
+    "ErrorSecretNotFound": {
+        "description": "Error message when secret is not found",
+        "one": "Секрет не найден",
+        "other": "Секрет не найден"
+    },
+    "ErrorSecretExpired": {
+        "description": "Error message when secret has expired",
+        "one": "Срок действия секрета истек",
+        "other": "Срок действия секрета истек"
+    },
+    "ErrorSecretMaxReads": {
+        "description": "Error message when secret has reached max reads",
+        "one": "Секрет достиг максимального количества прочтений",
+        "other": "Секрет достиг максимального количества прочтений"
+    },
+    "ErrorInvalidSecretFormat": {
+        "description": "Error message for invalid secret format",
+        "one": "Неверный формат секрета",
+        "other": "Неверный формат секрета"
+    },
+    "ErrorEncryptionFailed": {
+        "description": "Error message when encryption fails",
+        "one": "Ошибка шифрования",
+        "other": "Ошибка шифрования"
+    },
+    "ErrorDecryptionFailed": {
+        "description": "Error message when decryption fails",
+        "one": "Ошибка расшифровки",
+        "other": "Ошибка расшифровки"
+    },
+    "ErrorInitializationFailed": {
+        "description": "Error message when initialization fails",
+        "one": "Ошибка инициализации",
+        "other": "Ошибка инициализации"
+    },
+    "ErrorTokenGeneration": {
+        "description": "Error message when token generation fails",
+        "one": "Ошибка генерации токена",
+        "other": "Ошибка генерации токена"
+    },
+    "ErrorStorageFailed": {
+        "description": "Error message when storage operation fails",
+        "one": "Ошибка сохранения",
+        "other": "Ошибка сохранения"
+    },
+    "ErrorRetrievalFailed": {
+        "description": "Error message when retrieval operation fails",
+        "one": "Ошибка получения данных",
+        "other": "Ошибка получения данных"
+    },
+    "ErrorCleanupFailed": {
+        "description": "Error message when cleanup operation fails",
+        "one": "Ошибка очистки",
+        "other": "Ошибка очистки"
+    },
+    "ErrorRoleNotFound": {
+        "description": "Error message when role is not found",
+        "one": "Роль не найдена",
+        "other": "Роль не найдена"
+    },
+    "ErrorRoleAlreadyAssigned": {
+        "description": "Error message when role is already assigned",
+        "one": "Роль уже назначена",
+        "other": "Роль уже назначена"
+    },
+    "ErrorRoleNotAssigned": {
+        "description": "Error message when role is not assigned",
+        "one": "Роль не назначена",
+        "other": "Роль не назначена"
+    },
+    "ErrorSecretAlreadyExists": {
+        "description": "Error message when secret already exists",
+        "one": "Секрет уже существует",
+        "other": "Секрет уже существует"
+    },
+    "ErrorInvalidResetToken": {
+        "description": "Error message for invalid or expired password reset token",
+        "one": "Недействительный или истёкший токен сброса пароля",
+        "other": "Недействительный или истёкший токен сброса пароля"
+    },
+    "ErrorRequiredField": {
+        "description": "Error message for required field validation",
+        "one": "Обязательное поле",
+        "other": "Обязательное поле"
+    },
+    "SuccessSecretCreated": {
+        "description": "Success message for secret creation",
+        "one": "Секрет успешно создан",
+        "other": "Секрет успешно создан"
+    },
+    "SuccessSecretUpdated": {
+        "description": "Success message for secret update",
+        "one": "Секрет успешно обновлен",
+        "other": "Секрет успешно обновлен"
+    },
+    "SuccessSecretDeleted": {
+        "description": "Success message for secret deletion",
+        "one": "Секрет успешно удален",
+        "other": "Секрет успешно удален"
+    },
+    "SuccessUserCreated": {
+        "description": "Success message for user creation",
+        "one": "Пользователь успешно создан",
+        "other": "Пользователь успешно создан"
+    },
+    "SuccessUserUpdated": {
+        "description": "Success message for user update",
+        "one": "Пользователь успешно обновлен",
+        "other": "Пользователь успешно обновлен"
+    },
+    "SuccessLoginSuccessful": {
+        "description": "Success message for successful login",
+        "one": "Вход выполнен успешно",
+        "other": "Вход выполнен успешно"
+    },
+    "SuccessLogoutSuccessful": {
+        "description": "Success message for successful logout",
+        "one": "Выход выполнен успешно",
+        "other": "Выход выполнен успешно"
+    },
+    "InfoSecretExpired": {
+        "description": "Info message for expired secret",
+        "one": "Срок действия этого секрета истек",
+        "other": "Срок действия этого секрета истек"
+    },
+    "InfoSecretMaxReads": {
+        "description": "Info message for secret max reads reached",
+        "one": "Этот секрет достиг максимального количества прочтений",
+        "other": "Этот секрет достиг максимального количества прочтений"
+    },
+    "InfoSystemInitialized": {
+        "description": "Info message when system is initialized",
+        "one": "Система успешно инициализирована",
+        "other": "Система успешно инициализирована"
+    },
+    "InfoDatabaseMigrated": {
+        "description": "Info message when database is migrated",
+        "one": "База данных успешно мигрирована",
+        "other": "База данных успешно мигрирована"
+    },
+    "LabelName": {
+        "description": "Label for name field",
+        "one": "Имя",
+        "other": "Имя"
+    },
+    "LabelValue": {
+        "description": "Label for value field",
+        "one": "Значение",
+        "other": "Значение"
+    },
+    "LabelNamespace": {
+        "description": "Label for namespace field",
+        "one": "Пространство имен",
+        "other": "Пространство имен"
+    },
+    "LabelZone": {
+        "description": "Label for zone field",
+        "one": "Зона",
+        "other": "Зона"
+    },
+    "LabelEnvironment": {
+        "description": "Label for environment field",
+        "one": "Окружение",
+        "other": "Окружение"
+    },
+    "LabelType": {
+        "description": "Label for type field",
+        "one": "Тип",
+        "other": "Тип"
+    },
+    "LabelMaxReads": {
+        "description": "Label for max reads field",
+        "one": "Максимальное количество прочтений",
+        "other": "Максимальное количество прочтений"
+    },
+    "LabelExpiration": {
+        "description": "Label for expiration field",
+        "one": "Срок действия",
+        "other": "Срок действия"
+    },
+    "LabelMetadata": {
+        "description": "Label for metadata field",
+        "one": "Метаданные",
+        "other": "Метаданные"
+    },
+    "LabelTags": {
+        "description": "Label for tags field",
+        "one": "Теги",
+        "other": "Теги"
+    },
+    "LabelUsername": {
+        "description": "Label for username field",
+        "one": "Имя пользователя",
+        "other": "Имя пользователя"
+    },
+    "LabelPassword": {
+        "description": "Label for password field",
+        "one": "Пароль",
+        "other": "Пароль"
+    },
+    "LabelEmail": {
+        "description": "Label for email field",
+        "one": "Электронная почта",
+        "other": "Электронная почта"
+    },
+    "LabelRole": {
+        "description": "Label for role field",
+        "one": "Роль",
+        "other": "Роль"
+    },
+    "LabelPermissions": {
+        "description": "Label for permissions field",
+        "one": "Разрешения",
+        "other": "Разрешения"
+    },
+    "ButtonCreate": {
+        "description": "Button text for create action",
+        "one": "Создать",
+        "other": "Создать"
+    },
+    "ButtonUpdate": {
+        "description": "Button text for update action",
+        "one": "Обновить",
+        "other": "Обновить"
+    },
+    "ButtonDelete": {
+        "description": "Button text for delete action",
+        "one": "Удалить",
+        "other": "Удалить"
+    },
+    "ButtonCancel": {
+        "description": "Button text for cancel action",
+        "one": "Отмена",
+        "other": "Отмена"
+    },
+    "ButtonSave": {
+        "description": "Button text for save action",
+        "one": "Сохранить",
+        "other": "Сохранить"
+    },
+    "ButtonClose": {
+        "description": "Button text for close action",
+        "one": "Закрыть",
+        "other": "Закрыть"
+    },
+    "ButtonConfirm": {
+        "description": "Button text for confirm action",
+        "one": "Подтвердить",
+        "other": "Подтвердить"
+    },
+    "ButtonBack": {
+        "description": "Button text for back action",
+        "one": "Назад",
+        "other": "Назад"
+    },
+    "ButtonNext": {
+        "description": "Button text for next action",
+        "one": "Далее",
+        "other": "Далее"
+    },
+    "ButtonPrevious": {
+        "description": "Button text for previous action",
+        "one": "Предыдущий",
+        "other": "Предыдущий"
+    },
+    "ButtonSubmit": {
+        "description": "Button text for submit action",
+        "one": "Отправить",
+        "other": "Отправить"
+    },
+    "ButtonReset": {
+        "description": "Button text for reset action",
+        "one": "Сбросить",
+        "other": "Сбросить"
+    },
+    "ButtonSearch": {
+        "description": "Button text for search action",
+        "one": "Поиск",
+        "other": "Поиск"
+    },
+    "ButtonFilter": {
+        "description": "Button text for filter action",
+        "one": "Фильтр",
+        "other": "Фильтр"
+    },
+    "ButtonClear": {
+        "description": "Button text for clear action",
+        "one": "Очистить",
+        "other": "Очистить"
+    },
+    "ButtonApply": {
+        "description": "Button text for apply action",
+        "one": "Применить",
+        "other": "Применить"
+    },
+    "ButtonLogin": {
+        "description": "Button text for login action",
+        "one": "Войти",
+        "other": "Войти"
+    },
+    "ButtonLogout": {
+        "description": "Button text for logout action",
+        "one": "Выйти",
+        "other": "Выйти"
+    },
+    "ButtonRegister": {
+        "description": "Button text for register action",
+        "one": "Зарегистрироваться",
+        "other": "Зарегистрироваться"
+    },
+    "ButtonDownload": {
+        "description": "Button text for download action",
+        "one": "Скачать",
+        "other": "Скачать"
+    },
+    "ButtonUpload": {
+        "description": "Button text for upload action",
+        "one": "Загрузить",
+        "other": "Загрузить"
+    },
+    "ButtonImport": {
+        "description": "Button text for import action",
+        "one": "Импорт",
+        "other": "Импорт"
+    },
+    "ButtonExport": {
+        "description": "Button text for export action",
+        "one": "Экспорт",
+        "other": "Экспорт"
+    },
+    "ButtonRefresh": {
+        "description": "Button text for refresh action",
+        "one": "Обновить",
+        "other": "Обновить"
+    },
+    "ButtonCopy": {
+        "description": "Button text for copy action",
+        "one": "Копировать",
+        "other": "Копировать"
+    },
+    "ButtonEdit": {
+        "description": "Button text for edit action",
+        "one": "Редактировать",
+        "other": "Редактировать"
+    },
+    "ButtonView": {
+        "description": "Button text for view action",
+        "one": "Просмотр",
+        "other": "Просмотр"
+    },
+    "ButtonAdd": {
+        "description": "Button text for add action",
+        "one": "Добавить",
+        "other": "Добавить"
+    },
+    "ButtonRemove": {
+        "description": "Button text for remove action",
+        "one": "Удалить",
+        "other": "Удалить"
+    },
+    "ButtonEnable": {
+        "description": "Button text for enable action",
+        "one": "Включить",
+        "other": "Включить"
+    },
+    "ButtonDisable": {
+        "description": "Button text for disable action",
+        "one": "Отключить",
+        "other": "Отключить"
+    },
+    "ButtonValidate": {
+        "description": "Button text for validate action",
+        "one": "Проверить",
+        "other": "Проверить"
+    },
+    "ButtonStatus": {
+        "description": "Button text for status action",
+        "one": "Статус",
+        "other": "Статус"
+    }
+}

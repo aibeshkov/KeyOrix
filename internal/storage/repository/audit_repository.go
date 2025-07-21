@@ -18,12 +18,12 @@ func NewAuditRepository(db *gorm.DB) AuditRepository {
 	return &auditRepo{db}
 }
 
-// LogEvent сохраняет событие аудита в базу
+// LogEvent saves an audit event to the database
 func (r *auditRepo) LogEvent(event *models.AuditEvent) error {
 	return r.db.Create(event).Error
 }
 
-// ListByUser возвращает список событий аудита для пользователя по userID
+// ListByUser returns a list of audit events for a user by userID
 func (r *auditRepo) ListByUser(userID uint) ([]models.AuditEvent, error) {
 	var events []models.AuditEvent
 	err := r.db.Where("user_id = ?", userID).Find(&events).Error

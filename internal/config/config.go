@@ -30,15 +30,19 @@ type ServerConfig struct {
 }
 
 type ServerInstanceConfig struct {
-	Enabled          bool            `yaml:"enabled"`
-	Port             string          `yaml:"port"`
-	ProtocolVersions []string        `yaml:"protocol_versions"`
-	TLS              TLSConfig       `yaml:"tls"`
-	RateLimit        RateLimitConfig `yaml:"ratelimit"`
+	Enabled           bool            `yaml:"enabled"`
+	Port              string          `yaml:"port"`
+	ProtocolVersions  []string        `yaml:"protocol_versions"`
+	TLS               TLSConfig       `yaml:"tls"`
+	RateLimit         RateLimitConfig `yaml:"ratelimit"`
+	SwaggerEnabled    bool            `yaml:"swagger_enabled,omitempty"`
+	ReflectionEnabled bool            `yaml:"reflection_enabled,omitempty"`
 }
 
 type TLSConfig struct {
 	Enabled        bool     `yaml:"enabled"`
+	AutoCert       bool     `yaml:"auto_cert,omitempty"`
+	Domains        []string `yaml:"domains,omitempty"`
 	CertFile       string   `yaml:"cert_file"`
 	KeyFile        string   `yaml:"key_file"`
 	AllowedCiphers []string `yaml:"allowed_ciphers"`
@@ -108,8 +112,8 @@ type PurgeConfig struct {
 
 const appRootDir = "."
 
-// Load загружает YAML-конфигурацию из файла.
-// Если path пустой, загружает из "secretly.yaml" в корне приложения.
+// Load loads the YAML configuration file.
+// If path is empty, it will load "secretly.yaml" from the application root.
 func Load(path string) (*Config, error) {
 	if path == "" {
 		path = filepath.Join(appRootDir, "secretly.yaml")
@@ -126,4 +130,69 @@ func Load(path string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+// LoadConfig loads configuration using the default path.
+// Used for server module compatibility.
+func LoadConfig() (*Config, error) {
+	return Load("")
+}
+
+// Validate checks the configuration for required fields and correctness.
+func (c *Config) Validate() error {
+	// Validate server settings
+	if c.Server.HTTP.Enabled && c.Server.HTTP.Port == "" {
+		return fmt.Errorf("HTTP server is enabled but no port is specified")
+	}
+
+	if c.Server.GRPC.Enabled && c.Server.GRPC.Port == "" {
+		return fmt.Errorf("gRPC server is enabled but no port is specified")
+	}
+
+	// Validate TLS settings
+	if c.Server.HTTP.TLS.Enabled {
+		if c.Server.HTTP.TLS.AutoCert {
+			if len(c.Server.HTTP.TLS.Domains) == 0 {
+				return fmt.Errorf("autocert is enabled but no domains are specified")
+			}
+		} else {
+			if c.Server.HTTP.TLS.CertFile == "" || c.Server.HTTP.TLS.KeyFile == "" {
+				return fmt.Errorf("TLS is enabled but cert_file or key_file is missing")
+			}
+		}
+	}
+
+	if c.Server.GRPC.TLS.Enabled {
+		if !c.Server.GRPC.TLS.AutoCert {
+			if c.Server.GRPC.TLS.CertFile == "" || c.Server.GRPC.TLS.KeyFile == "" {
+				return fmt.Errorf("gRPC TLS is enabled but cert_file or key_file is missing")
+			}
+		}
+	}
+
+	// Validate database configuration
+	if c.Storage.Database.Path == "" {
+		return fmt.Errorf("database path is not specified")
+	}
+
+	// Validate locale configuration
+	if c.Locale.Language == "" {
+		c.Locale.Language = "en" // Default to English
+	}
+	if c.Locale.FallbackLanguage == "" {
+		c.Locale.FallbackLanguage = "en" // Default fallback to English
+	}
+
+	// Validate supported language codes
+	supportedLanguages := map[string]bool{
+		"en": true, "ru": true, "es": true, "fr": true, "de": true,
+	}
+	if !supportedLanguages[c.Locale.Language] {
+		return fmt.Errorf("unsupported language: %s. Supported languages: en, ru, es, fr, de", c.Locale.Language)
+	}
+	if !supportedLanguages[c.Locale.FallbackLanguage] {
+		return fmt.Errorf("unsupported fallback language: %s. Supported languages: en, ru, es, fr, de", c.Locale.FallbackLanguage)
+	}
+
+	return nil
 }

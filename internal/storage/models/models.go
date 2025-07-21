@@ -113,19 +113,23 @@ type SecretMetadataHistory struct {
 }
 
 type Session struct {
-	ID           uint `gorm:"primaryKey"`
-	UserID       uint
-	SessionToken string `gorm:"unique"`
-	CreatedAt    time.Time
-	ExpiresAt    *time.Time
+	ID                     uint `gorm:"primaryKey"`
+	UserID                 uint
+	SessionToken           string `gorm:"unique"` // Deprecated: use EncryptedSessionToken
+	EncryptedSessionToken  []byte
+	SessionTokenMetadata   datatypes.JSON
+	CreatedAt              time.Time
+	ExpiresAt              *time.Time
 }
 
 type PasswordReset struct {
-	ID        uint `gorm:"primaryKey"`
-	UserID    uint
-	Token     string `gorm:"unique"`
-	ExpiresAt *time.Time
-	CreatedAt time.Time
+	ID                   uint `gorm:"primaryKey"`
+	UserID               uint
+	Token                string `gorm:"unique"` // Deprecated: use EncryptedToken
+	EncryptedToken       []byte
+	TokenMetadata        datatypes.JSON
+	ExpiresAt            *time.Time
+	CreatedAt            time.Time
 }
 
 type Tag struct {
@@ -171,25 +175,29 @@ type SystemMetadata struct {
 }
 
 type APIClient struct {
-	ID           uint `gorm:"primaryKey"`
-	Name         string
-	Description  string
-	ClientID     string `gorm:"unique"`
-	ClientSecret string
-	Scopes       string
-	IsActive     bool
-	CreatedAt    time.Time
+	ID                     uint `gorm:"primaryKey"`
+	Name                   string
+	Description            string
+	ClientID               string `gorm:"unique"`
+	ClientSecret           string // Deprecated: use EncryptedClientSecret
+	EncryptedClientSecret  []byte
+	ClientSecretMetadata   datatypes.JSON
+	Scopes                 string
+	IsActive               bool
+	CreatedAt              time.Time
 }
 
 type APIToken struct {
-	ID        uint `gorm:"primaryKey"`
-	ClientID  uint
-	UserID    *uint
-	Token     string `gorm:"unique"`
-	Scope     string
-	Revoked   bool
-	ExpiresAt *time.Time
-	CreatedAt time.Time
+	ID            uint `gorm:"primaryKey"`
+	ClientID      uint
+	UserID        *uint
+	Token         string `gorm:"unique"` // Deprecated: use EncryptedToken
+	EncryptedToken []byte
+	TokenMetadata datatypes.JSON
+	Scope         string
+	Revoked       bool
+	ExpiresAt     *time.Time
+	CreatedAt     time.Time
 }
 
 type RateLimit struct {

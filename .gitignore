@@ -42,6 +42,7 @@ keys/
 # --- Local config ---
 config.yaml
 *.local.yaml
+secretly.yaml
 
 # --- Telemetry & logs ---
 telemetry/
@@ -51,6 +52,7 @@ telemetry/
 .env
 .secretly_history
 .secretly_cache
+secretly
 
 # --- CI/CD cache or outputs ---
 .cache/
@@ -61,14 +63,34 @@ artifacts/
 *.tmp
 *.temp
 *~
+*.zip
+*.tpl
 
+# --- Shell scripts (internal tooling) ---
 add.sh
+apply_full_migration.sh
+buid.sh
+tree.sh
+find_linter.sh
+find_ruusian.sh
 *.sh~
 *.sh.bak
 *.sh.tmp
-*.sh
-*.zip
-*.tpl
-secretly
-secretly.yaml
 
+# --- Secure audit & static analysis reports ---
+/security/
+
+# --- Task tooling state ---
+.task/
+
+# --- Go workspace files ---
+go.work
+go.work.sum
+
+# --- Proto-generated binaries or test artifacts ---
+server/secretly-server
+secretly-test
+
+# --- Local CLI specs and debug dirs ---
+.kiro/
+*.spec.json

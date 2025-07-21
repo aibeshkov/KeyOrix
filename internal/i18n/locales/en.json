@@ -1,0 +1,437 @@
+{
+    "Welcome": {
+        "description": "Welcome message",
+        "one": "Welcome to Secretly!",
+        "other": "Welcome to Secretly!"
+    },
+    "Goodbye": {
+        "description": "Goodbye message",
+        "one": "Goodbye!",
+        "other": "Goodbye!"
+    },
+    "ErrorUserNotFound": {
+        "description": "Error message when user is not found",
+        "one": "User not found",
+        "other": "User not found"
+    },
+    "ErrorInvalidCredentials": {
+        "description": "Error message for invalid credentials",
+        "one": "Invalid credentials",
+        "other": "Invalid credentials"
+    },
+    "ErrorUnauthorized": {
+        "description": "Error message for unauthorized access",
+        "one": "Unauthorized access",
+        "other": "Unauthorized access"
+    },
+    "ErrorForbidden": {
+        "description": "Error message for forbidden access",
+        "one": "Forbidden access",
+        "other": "Forbidden access"
+    },
+    "ErrorInternalServer": {
+        "description": "Error message for internal server error",
+        "one": "Internal server error",
+        "other": "Internal server error"
+    },
+    "ErrorBadRequest": {
+        "description": "Error message for bad request",
+        "one": "Bad request",
+        "other": "Bad request"
+    },
+    "ErrorNotFound": {
+        "description": "Error message for resource not found",
+        "one": "Resource not found",
+        "other": "Resource not found"
+    },
+    "ErrorValidation": {
+        "description": "Error message for validation error",
+        "one": "Validation error",
+        "other": "Validation error"
+    },
+    "ErrorDatabaseConnection": {
+        "description": "Error message for database connection error",
+        "one": "Database connection error",
+        "other": "Database connection error"
+    },
+    "ErrorSecretNotFound": {
+        "description": "Error message when secret is not found",
+        "one": "Secret not found",
+        "other": "Secret not found"
+    },
+    "ErrorSecretExpired": {
+        "description": "Error message when secret has expired",
+        "one": "Secret has expired",
+        "other": "Secret has expired"
+    },
+    "ErrorSecretMaxReads": {
+        "description": "Error message when secret has reached max reads",
+        "one": "Secret has reached maximum number of reads",
+        "other": "Secret has reached maximum number of reads"
+    },
+    "ErrorInvalidSecretFormat": {
+        "description": "Error message for invalid secret format",
+        "one": "Invalid secret format",
+        "other": "Invalid secret format"
+    },
+    "ErrorEncryptionFailed": {
+        "description": "Error message when encryption fails",
+        "one": "Encryption failed",
+        "other": "Encryption failed"
+    },
+    "ErrorDecryptionFailed": {
+        "description": "Error message when decryption fails",
+        "one": "Decryption failed",
+        "other": "Decryption failed"
+    },
+    "ErrorInitializationFailed": {
+        "description": "Error message when initialization fails",
+        "one": "Initialization failed",
+        "other": "Initialization failed"
+    },
+    "ErrorTokenGeneration": {
+        "description": "Error message when token generation fails",
+        "one": "Token generation failed",
+        "other": "Token generation failed"
+    },
+    "ErrorStorageFailed": {
+        "description": "Error message when storage operation fails",
+        "one": "Storage operation failed",
+        "other": "Storage operation failed"
+    },
+    "ErrorRetrievalFailed": {
+        "description": "Error message when retrieval operation fails",
+        "one": "Retrieval operation failed",
+        "other": "Retrieval operation failed"
+    },
+    "ErrorCleanupFailed": {
+        "description": "Error message when cleanup operation fails",
+        "one": "Cleanup operation failed",
+        "other": "Cleanup operation failed"
+    },
+    "ErrorRoleNotFound": {
+        "description": "Error message when role is not found",
+        "one": "Role not found",
+        "other": "Role not found"
+    },
+    "ErrorRoleAlreadyAssigned": {
+        "description": "Error message when role is already assigned",
+        "one": "Role already assigned",
+        "other": "Role already assigned"
+    },
+    "ErrorRoleNotAssigned": {
+        "description": "Error message when role is not assigned",
+        "one": "Role not assigned",
+        "other": "Role not assigned"
+    },
+    "ErrorSecretAlreadyExists": {
+        "description": "Error message when secret already exists",
+        "one": "Secret already exists",
+        "other": "Secret already exists"
+    },
+    "ErrorInvalidResetToken": {
+        "description": "Error message for invalid or expired password reset token",
+        "one": "Invalid or expired password reset token",
+        "other": "Invalid or expired password reset token"
+    },
+    "ErrorRequiredField": {
+        "description": "Error message for required field validation",
+        "one": "Required field",
+        "other": "Required field"
+    },
+    "SuccessSecretCreated": {
+        "description": "Success message for secret creation",
+        "one": "Secret created successfully",
+        "other": "Secret created successfully"
+    },
+    "SuccessSecretUpdated": {
+        "description": "Success message for secret update",
+        "one": "Secret updated successfully",
+        "other": "Secret updated successfully"
+    },
+    "SuccessSecretDeleted": {
+        "description": "Success message for secret deletion",
+        "one": "Secret deleted successfully",
+        "other": "Secret deleted successfully"
+    },
+    "SuccessUserCreated": {
+        "description": "Success message for user creation",
+        "one": "User created successfully",
+        "other": "User created successfully"
+    },
+    "SuccessUserUpdated": {
+        "description": "Success message for user update",
+        "one": "User updated successfully",
+        "other": "User updated successfully"
+    },
+    "SuccessLoginSuccessful": {
+        "description": "Success message for successful login",
+        "one": "Login successful",
+        "other": "Login successful"
+    },
+    "SuccessLogoutSuccessful": {
+        "description": "Success message for successful logout",
+        "one": "Logout successful",
+        "other": "Logout successful"
+    },
+    "InfoSecretExpired": {
+        "description": "Info message for expired secret",
+        "one": "This secret has expired",
+        "other": "This secret has expired"
+    },
+    "InfoSecretMaxReads": {
+        "description": "Info message for secret max reads reached",
+        "one": "This secret has reached its maximum number of reads",
+        "other": "This secret has reached its maximum number of reads"
+    },
+    "InfoSystemInitialized": {
+        "description": "Info message when system is initialized",
+        "one": "System initialized successfully",
+        "other": "System initialized successfully"
+    },
+    "InfoDatabaseMigrated": {
+        "description": "Info message when database is migrated",
+        "one": "Database migrated successfully",
+        "other": "Database migrated successfully"
+    },
+    "LabelName": {
+        "description": "Label for name field",
+        "one": "Name",
+        "other": "Name"
+    },
+    "LabelValue": {
+        "description": "Label for value field",
+        "one": "Value",
+        "other": "Value"
+    },
+    "LabelNamespace": {
+        "description": "Label for namespace field",
+        "one": "Namespace",
+        "other": "Namespace"
+    },
+    "LabelZone": {
+        "description": "Label for zone field",
+        "one": "Zone",
+        "other": "Zone"
+    },
+    "LabelEnvironment": {
+        "description": "Label for environment field",
+        "one": "Environment",
+        "other": "Environment"
+    },
+    "LabelType": {
+        "description": "Label for type field",
+        "one": "Type",
+        "other": "Type"
+    },
+    "LabelMaxReads": {
+        "description": "Label for max reads field",
+        "one": "Max Reads",
+        "other": "Max Reads"
+    },
+    "LabelExpiration": {
+        "description": "Label for expiration field",
+        "one": "Expiration",
+        "other": "Expiration"
+    },
+    "LabelMetadata": {
+        "description": "Label for metadata field",
+        "one": "Metadata",
+        "other": "Metadata"
+    },
+    "LabelTags": {
+        "description": "Label for tags field",
+        "one": "Tags",
+        "other": "Tags"
+    },
+    "LabelUsername": {
+        "description": "Label for username field",
+        "one": "Username",
+        "other": "Username"
+    },
+    "LabelPassword": {
+        "description": "Label for password field",
+        "one": "Password",
+        "other": "Password"
+    },
+    "LabelEmail": {
+        "description": "Label for email field",
+        "one": "Email",
+        "other": "Email"
+    },
+    "LabelRole": {
+        "description": "Label for role field",
+        "one": "Role",
+        "other": "Role"
+    },
+    "LabelPermissions": {
+        "description": "Label for permissions field",
+        "one": "Permissions",
+        "other": "Permissions"
+    },
+    "ButtonCreate": {
+        "description": "Button text for create action",
+        "one": "Create",
+        "other": "Create"
+    },
+    "ButtonUpdate": {
+        "description": "Button text for update action",
+        "one": "Update",
+        "other": "Update"
+    },
+    "ButtonDelete": {
+        "description": "Button text for delete action",
+        "one": "Delete",
+        "other": "Delete"
+    },
+    "ButtonCancel": {
+        "description": "Button text for cancel action",
+        "one": "Cancel",
+        "other": "Cancel"
+    },
+    "ButtonSave": {
+        "description": "Button text for save action",
+        "one": "Save",
+        "other": "Save"
+    },
+    "ButtonClose": {
+        "description": "Button text for close action",
+        "one": "Close",
+        "other": "Close"
+    },
+    "ButtonConfirm": {
+        "description": "Button text for confirm action",
+        "one": "Confirm",
+        "other": "Confirm"
+    },
+    "ButtonBack": {
+        "description": "Button text for back action",
+        "one": "Back",
+        "other": "Back"
+    },
+    "ButtonNext": {
+        "description": "Button text for next action",
+        "one": "Next",
+        "other": "Next"
+    },
+    "ButtonPrevious": {
+        "description": "Button text for previous action",
+        "one": "Previous",
+        "other": "Previous"
+    },
+    "ButtonSubmit": {
+        "description": "Button text for submit action",
+        "one": "Submit",
+        "other": "Submit"
+    },
+    "ButtonReset": {
+        "description": "Button text for reset action",
+        "one": "Reset",
+        "other": "Reset"
+    },
+    "ButtonSearch": {
+        "description": "Button text for search action",
+        "one": "Search",
+        "other": "Search"
+    },
+    "ButtonFilter": {
+        "description": "Button text for filter action",
+        "one": "Filter",
+        "other": "Filter"
+    },
+    "ButtonClear": {
+        "description": "Button text for clear action",
+        "one": "Clear",
+        "other": "Clear"
+    },
+    "ButtonApply": {
+        "description": "Button text for apply action",
+        "one": "Apply",
+        "other": "Apply"
+    },
+    "ButtonLogin": {
+        "description": "Button text for login action",
+        "one": "Login",
+        "other": "Login"
+    },
+    "ButtonLogout": {
+        "description": "Button text for logout action",
+        "one": "Logout",
+        "other": "Logout"
+    },
+    "ButtonRegister": {
+        "description": "Button text for register action",
+        "one": "Register",
+        "other": "Register"
+    },
+    "ButtonDownload": {
+        "description": "Button text for download action",
+        "one": "Download",
+        "other": "Download"
+    },
+    "ButtonUpload": {
+        "description": "Button text for upload action",
+        "one": "Upload",
+        "other": "Upload"
+    },
+    "ButtonImport": {
+        "description": "Button text for import action",
+        "one": "Import",
+        "other": "Import"
+    },
+    "ButtonExport": {
+        "description": "Button text for export action",
+        "one": "Export",
+        "other": "Export"
+    },
+    "ButtonRefresh": {
+        "description": "Button text for refresh action",
+        "one": "Refresh",
+        "other": "Refresh"
+    },
+    "ButtonCopy": {
+        "description": "Button text for copy action",
+        "one": "Copy",
+        "other": "Copy"
+    },
+    "ButtonEdit": {
+        "description": "Button text for edit action",
+        "one": "Edit",
+        "other": "Edit"
+    },
+    "ButtonView": {
+        "description": "Button text for view action",
+        "one": "View",
+        "other": "View"
+    },
+    "ButtonAdd": {
+        "description": "Button text for add action",
+        "one": "Add",
+        "other": "Add"
+    },
+    "ButtonRemove": {
+        "description": "Button text for remove action",
+        "one": "Remove",
+        "other": "Remove"
+    },
+    "ButtonEnable": {
+        "description": "Button text for enable action",
+        "one": "Enable",
+        "other": "Enable"
+    },
+    "ButtonDisable": {
+        "description": "Button text for disable action",
+        "one": "Disable",
+        "other": "Disable"
+    },
+    "ButtonValidate": {
+        "description": "Button text for validate action",
+        "one": "Validate",
+        "other": "Validate"
+    },
+    "ButtonStatus": {
+        "description": "Button text for status action",
+        "one": "Status",
+        "other": "Status"
+    }
+}

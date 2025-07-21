@@ -33,34 +33,64 @@ func (se *SecretEncryption) Initialize() error {
 
 // StoreSecret encrypts and stores a secret in the database
 func (se *SecretEncryption) StoreSecret(secretNode *models.SecretNode, plaintext []byte) (*models.SecretVersion, error) {
+	// Use a transaction to ensure atomicity and prevent race conditions
+	tx := se.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Calculate next version number within the transaction
+	var maxVersion int
+	err := tx.Model(&models.SecretVersion{}).
+		Where("secret_node_id = ?", secretNode.ID).
+		Select("COALESCE(MAX(version_number), 0)").
+		Scan(&maxVersion).Error
+
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to calculate version number: %w", err)
+	}
+
+	nextVersion := maxVersion + 1
+
 	if !se.service.IsEnabled() {
 		// Store unencrypted if encryption is disabled
 		version := &models.SecretVersion{
 			SecretNodeID:   secretNode.ID,
-			VersionNumber:  1, // This should be calculated based on existing versions
+			VersionNumber:  nextVersion,
 			EncryptedValue: plaintext,
 		}
-		return version, se.db.Create(version).Error
+		if err := tx.Create(version).Error; err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("failed to store unencrypted secret: %w", err)
+		}
+		tx.Commit()
+		return version, nil
 	}
 
 	// Encrypt the secret
 	encryptedData, metadata, err := se.service.EncryptSecret(plaintext)
 	if err != nil {
+		tx.Rollback()
 		return nil, fmt.Errorf("failed to encrypt secret: %w", err)
 	}
 
 	// Create secret version
 	version := &models.SecretVersion{
 		SecretNodeID:       secretNode.ID,
-		VersionNumber:      1, // This should be calculated based on existing versions
+		VersionNumber:      nextVersion,
 		EncryptedValue:     encryptedData,
 		EncryptionMetadata: datatypes.JSON(metadata),
 	}
 
-	if err := se.db.Create(version).Error; err != nil {
+	if err := tx.Create(version).Error; err != nil {
+		tx.Rollback()
 		return nil, fmt.Errorf("failed to store encrypted secret: %w", err)
 	}
 
+	tx.Commit()
 	return version, nil
 }
 
@@ -218,3 +248,5 @@ func (se *SecretEncryption) ValidateEncryption() error {
 
 	return se.service.ValidateKeyFiles()
 }
+
+

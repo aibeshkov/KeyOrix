@@ -1,0 +1,437 @@
+{
+    "Welcome": {
+        "description": "Welcome message",
+        "one": "Willkommen bei Secretly!",
+        "other": "Willkommen bei Secretly!"
+    },
+    "Goodbye": {
+        "description": "Goodbye message",
+        "one": "Auf Wiedersehen!",
+        "other": "Auf Wiedersehen!"
+    },
+    "ErrorUserNotFound": {
+        "description": "Error message when user is not found",
+        "one": "Benutzer nicht gefunden",
+        "other": "Benutzer nicht gefunden"
+    },
+    "ErrorInvalidCredentials": {
+        "description": "Error message for invalid credentials",
+        "one": "Ungültige Anmeldedaten",
+        "other": "Ungültige Anmeldedaten"
+    },
+    "ErrorUnauthorized": {
+        "description": "Error message for unauthorized access",
+        "one": "Unbefugter Zugriff",
+        "other": "Unbefugter Zugriff"
+    },
+    "ErrorForbidden": {
+        "description": "Error message for forbidden access",
+        "one": "Zugriff verweigert",
+        "other": "Zugriff verweigert"
+    },
+    "ErrorInternalServer": {
+        "description": "Error message for internal server error",
+        "one": "Interner Serverfehler",
+        "other": "Interner Serverfehler"
+    },
+    "ErrorBadRequest": {
+        "description": "Error message for bad request",
+        "one": "Fehlerhafte Anfrage",
+        "other": "Fehlerhafte Anfrage"
+    },
+    "ErrorNotFound": {
+        "description": "Error message for resource not found",
+        "one": "Ressource nicht gefunden",
+        "other": "Ressource nicht gefunden"
+    },
+    "ErrorValidation": {
+        "description": "Error message for validation error",
+        "one": "Validierungsfehler",
+        "other": "Validierungsfehler"
+    },
+    "ErrorDatabaseConnection": {
+        "description": "Error message for database connection error",
+        "one": "Datenbankverbindungsfehler",
+        "other": "Datenbankverbindungsfehler"
+    },
+    "ErrorSecretNotFound": {
+        "description": "Error message when secret is not found",
+        "one": "Geheimnis nicht gefunden",
+        "other": "Geheimnis nicht gefunden"
+    },
+    "ErrorSecretExpired": {
+        "description": "Error message when secret has expired",
+        "one": "Das Geheimnis ist abgelaufen",
+        "other": "Das Geheimnis ist abgelaufen"
+    },
+    "ErrorSecretMaxReads": {
+        "description": "Error message when secret has reached max reads",
+        "one": "Das Geheimnis hat die maximale Anzahl von Lesevorgängen erreicht",
+        "other": "Das Geheimnis hat die maximale Anzahl von Lesevorgängen erreicht"
+    },
+    "ErrorInvalidSecretFormat": {
+        "description": "Error message for invalid secret format",
+        "one": "Ungültiges Geheimnisformat",
+        "other": "Ungültiges Geheimnisformat"
+    },
+    "ErrorEncryptionFailed": {
+        "description": "Error message when encryption fails",
+        "one": "Verschlüsselung fehlgeschlagen",
+        "other": "Verschlüsselung fehlgeschlagen"
+    },
+    "ErrorDecryptionFailed": {
+        "description": "Error message when decryption fails",
+        "one": "Entschlüsselung fehlgeschlagen",
+        "other": "Entschlüsselung fehlgeschlagen"
+    },
+    "ErrorInitializationFailed": {
+        "description": "Error message when initialization fails",
+        "one": "Initialisierung fehlgeschlagen",
+        "other": "Initialisierung fehlgeschlagen"
+    },
+    "ErrorTokenGeneration": {
+        "description": "Error message when token generation fails",
+        "one": "Token-Generierung fehlgeschlagen",
+        "other": "Token-Generierung fehlgeschlagen"
+    },
+    "ErrorStorageFailed": {
+        "description": "Error message when storage operation fails",
+        "one": "Speichervorgang fehlgeschlagen",
+        "other": "Speichervorgang fehlgeschlagen"
+    },
+    "ErrorRetrievalFailed": {
+        "description": "Error message when retrieval operation fails",
+        "one": "Abrufvorgang fehlgeschlagen",
+        "other": "Abrufvorgang fehlgeschlagen"
+    },
+    "ErrorCleanupFailed": {
+        "description": "Error message when cleanup operation fails",
+        "one": "Bereinigung fehlgeschlagen",
+        "other": "Bereinigung fehlgeschlagen"
+    },
+    "ErrorRoleNotFound": {
+        "description": "Error message when role is not found",
+        "one": "Rolle nicht gefunden",
+        "other": "Rolle nicht gefunden"
+    },
+    "ErrorRoleAlreadyAssigned": {
+        "description": "Error message when role is already assigned",
+        "one": "Rolle bereits zugewiesen",
+        "other": "Rolle bereits zugewiesen"
+    },
+    "ErrorRoleNotAssigned": {
+        "description": "Error message when role is not assigned",
+        "one": "Rolle nicht zugewiesen",
+        "other": "Rolle nicht zugewiesen"
+    },
+    "ErrorSecretAlreadyExists": {
+        "description": "Error message when secret already exists",
+        "one": "Geheimnis existiert bereits",
+        "other": "Geheimnis existiert bereits"
+    },
+    "ErrorInvalidResetToken": {
+        "description": "Error message for invalid or expired password reset token",
+        "one": "Ungültiger oder abgelaufener Passwort-Reset-Token",
+        "other": "Ungültiger oder abgelaufener Passwort-Reset-Token"
+    },
+    "ErrorRequiredField": {
+        "description": "Error message for required field validation",
+        "one": "Pflichtfeld",
+        "other": "Pflichtfeld"
+    },
+    "SuccessSecretCreated": {
+        "description": "Success message for secret creation",
+        "one": "Geheimnis erfolgreich erstellt",
+        "other": "Geheimnis erfolgreich erstellt"
+    },
+    "SuccessSecretUpdated": {
+        "description": "Success message for secret update",
+        "one": "Geheimnis erfolgreich aktualisiert",
+        "other": "Geheimnis erfolgreich aktualisiert"
+    },
+    "SuccessSecretDeleted": {
+        "description": "Success message for secret deletion",
+        "one": "Geheimnis erfolgreich gelöscht",
+        "other": "Geheimnis erfolgreich gelöscht"
+    },
+    "SuccessUserCreated": {
+        "description": "Success message for user creation",
+        "one": "Benutzer erfolgreich erstellt",
+        "other": "Benutzer erfolgreich erstellt"
+    },
+    "SuccessUserUpdated": {
+        "description": "Success message for user update",
+        "one": "Benutzer erfolgreich aktualisiert",
+        "other": "Benutzer erfolgreich aktualisiert"
+    },
+    "SuccessLoginSuccessful": {
+        "description": "Success message for successful login",
+        "one": "Anmeldung erfolgreich",
+        "other": "Anmeldung erfolgreich"
+    },
+    "SuccessLogoutSuccessful": {
+        "description": "Success message for successful logout",
+        "one": "Abmeldung erfolgreich",
+        "other": "Abmeldung erfolgreich"
+    },
+    "InfoSecretExpired": {
+        "description": "Info message for expired secret",
+        "one": "Dieses Geheimnis ist abgelaufen",
+        "other": "Dieses Geheimnis ist abgelaufen"
+    },
+    "InfoSecretMaxReads": {
+        "description": "Info message for secret max reads reached",
+        "one": "Dieses Geheimnis hat seine maximale Anzahl von Lesevorgängen erreicht",
+        "other": "Dieses Geheimnis hat seine maximale Anzahl von Lesevorgängen erreicht"
+    },
+    "InfoSystemInitialized": {
+        "description": "Info message when system is initialized",
+        "one": "System erfolgreich initialisiert",
+        "other": "System erfolgreich initialisiert"
+    },
+    "InfoDatabaseMigrated": {
+        "description": "Info message when database is migrated",
+        "one": "Datenbank erfolgreich migriert",
+        "other": "Datenbank erfolgreich migriert"
+    },
+    "LabelName": {
+        "description": "Label for name field",
+        "one": "Name",
+        "other": "Name"
+    },
+    "LabelValue": {
+        "description": "Label for value field",
+        "one": "Wert",
+        "other": "Wert"
+    },
+    "LabelNamespace": {
+        "description": "Label for namespace field",
+        "one": "Namensraum",
+        "other": "Namensraum"
+    },
+    "LabelZone": {
+        "description": "Label for zone field",
+        "one": "Zone",
+        "other": "Zone"
+    },
+    "LabelEnvironment": {
+        "description": "Label for environment field",
+        "one": "Umgebung",
+        "other": "Umgebung"
+    },
+    "LabelType": {
+        "description": "Label for type field",
+        "one": "Typ",
+        "other": "Typ"
+    },
+    "LabelMaxReads": {
+        "description": "Label for max reads field",
+        "one": "Maximale Lesevorgänge",
+        "other": "Maximale Lesevorgänge"
+    },
+    "LabelExpiration": {
+        "description": "Label for expiration field",
+        "one": "Ablauf",
+        "other": "Ablauf"
+    },
+    "LabelMetadata": {
+        "description": "Label for metadata field",
+        "one": "Metadaten",
+        "other": "Metadaten"
+    },
+    "LabelTags": {
+        "description": "Label for tags field",
+        "one": "Tags",
+        "other": "Tags"
+    },
+    "LabelUsername": {
+        "description": "Label for username field",
+        "one": "Benutzername",
+        "other": "Benutzername"
+    },
+    "LabelPassword": {
+        "description": "Label for password field",
+        "one": "Passwort",
+        "other": "Passwort"
+    },
+    "LabelEmail": {
+        "description": "Label for email field",
+        "one": "E-Mail",
+        "other": "E-Mail"
+    },
+    "LabelRole": {
+        "description": "Label for role field",
+        "one": "Rolle",
+        "other": "Rolle"
+    },
+    "LabelPermissions": {
+        "description": "Label for permissions field",
+        "one": "Berechtigungen",
+        "other": "Berechtigungen"
+    },
+    "ButtonCreate": {
+        "description": "Button text for create action",
+        "one": "Erstellen",
+        "other": "Erstellen"
+    },
+    "ButtonUpdate": {
+        "description": "Button text for update action",
+        "one": "Aktualisieren",
+        "other": "Aktualisieren"
+    },
+    "ButtonDelete": {
+        "description": "Button text for delete action",
+        "one": "Löschen",
+        "other": "Löschen"
+    },
+    "ButtonCancel": {
+        "description": "Button text for cancel action",
+        "one": "Abbrechen",
+        "other": "Abbrechen"
+    },
+    "ButtonSave": {
+        "description": "Button text for save action",
+        "one": "Speichern",
+        "other": "Speichern"
+    },
+    "ButtonClose": {
+        "description": "Button text for close action",
+        "one": "Schließen",
+        "other": "Schließen"
+    },
+    "ButtonConfirm": {
+        "description": "Button text for confirm action",
+        "one": "Bestätigen",
+        "other": "Bestätigen"
+    },
+    "ButtonBack": {
+        "description": "Button text for back action",
+        "one": "Zurück",
+        "other": "Zurück"
+    },
+    "ButtonNext": {
+        "description": "Button text for next action",
+        "one": "Weiter",
+        "other": "Weiter"
+    },
+    "ButtonPrevious": {
+        "description": "Button text for previous action",
+        "one": "Vorherige",
+        "other": "Vorherige"
+    },
+    "ButtonSubmit": {
+        "description": "Button text for submit action",
+        "one": "Senden",
+        "other": "Senden"
+    },
+    "ButtonReset": {
+        "description": "Button text for reset action",
+        "one": "Zurücksetzen",
+        "other": "Zurücksetzen"
+    },
+    "ButtonSearch": {
+        "description": "Button text for search action",
+        "one": "Suchen",
+        "other": "Suchen"
+    },
+    "ButtonFilter": {
+        "description": "Button text for filter action",
+        "one": "Filtern",
+        "other": "Filtern"
+    },
+    "ButtonClear": {
+        "description": "Button text for clear action",
+        "one": "Löschen",
+        "other": "Löschen"
+    },
+    "ButtonApply": {
+        "description": "Button text for apply action",
+        "one": "Anwenden",
+        "other": "Anwenden"
+    },
+    "ButtonLogin": {
+        "description": "Button text for login action",
+        "one": "Anmelden",
+        "other": "Anmelden"
+    },
+    "ButtonLogout": {
+        "description": "Button text for logout action",
+        "one": "Abmelden",
+        "other": "Abmelden"
+    },
+    "ButtonRegister": {
+        "description": "Button text for register action",
+        "one": "Registrieren",
+        "other": "Registrieren"
+    },
+    "ButtonDownload": {
+        "description": "Button text for download action",
+        "one": "Herunterladen",
+        "other": "Herunterladen"
+    },
+    "ButtonUpload": {
+        "description": "Button text for upload action",
+        "one": "Hochladen",
+        "other": "Hochladen"
+    },
+    "ButtonImport": {
+        "description": "Button text for import action",
+        "one": "Importieren",
+        "other": "Importieren"
+    },
+    "ButtonExport": {
+        "description": "Button text for export action",
+        "one": "Exportieren",
+        "other": "Exportieren"
+    },
+    "ButtonRefresh": {
+        "description": "Button text for refresh action",
+        "one": "Aktualisieren",
+        "other": "Aktualisieren"
+    },
+    "ButtonCopy": {
+        "description": "Button text for copy action",
+        "one": "Kopieren",
+        "other": "Kopieren"
+    },
+    "ButtonEdit": {
+        "description": "Button text for edit action",
+        "one": "Bearbeiten",
+        "other": "Bearbeiten"
+    },
+    "ButtonView": {
+        "description": "Button text for view action",
+        "one": "Anzeigen",
+        "other": "Anzeigen"
+    },
+    "ButtonAdd": {
+        "description": "Button text for add action",
+        "one": "Hinzufügen",
+        "other": "Hinzufügen"
+    },
+    "ButtonRemove": {
+        "description": "Button text for remove action",
+        "one": "Entfernen",
+        "other": "Entfernen"
+    },
+    "ButtonEnable": {
+        "description": "Button text for enable action",
+        "one": "Aktivieren",
+        "other": "Aktivieren"
+    },
+    "ButtonDisable": {
+        "description": "Button text for disable action",
+        "one": "Deaktivieren",
+        "other": "Deaktivieren"
+    },
+    "ButtonValidate": {
+        "description": "Button text for validate action",
+        "one": "Validieren",
+        "other": "Validieren"
+    },
+    "ButtonStatus": {
+        "description": "Button text for status action",
+        "one": "Status",
+        "other": "Status"
+    }
+}

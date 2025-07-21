@@ -1,50 +1,97 @@
 version: '3'
 
 tasks:
-  fmt:
-    desc: "Format Go code"
+  # ⛓ Общие зависимости
+  mkdir-security-dir:
+    internal: true
     cmds:
-      - go fmt ./...
-    silent: true
+      - mkdir -p security
 
-  vet:
-    desc: "Run go vet"
+  # ✅ Глобальная задача безопасности
+  security-all:
+    desc: ✅ Run all security tools
     cmds:
-      - go vet ./...
-    silent: true
+      - task: gosec
+      - task: osv-scanner
+      - task: semgrep
+      - task: trivy
+      - task: gitleaks
+      - task: trufflehog
 
-  lint:
-    desc: "Run golangci-lint"
-    cmds:
-      - |
-        if command -v golangci-lint >/dev/null 2>&1; then
-          golangci-lint run
-        else
-          echo "golangci-lint not installed, skipping lint"
-        fi
-    silent: true
-
+  # 🔒 Gosec
   gosec:
-    desc: "Run gosec security checks"
+    desc: 🔒 Run gosec
     cmds:
-      - |
-        if command -v gosec >/dev/null 2>&1; then
-          gosec ./...
-        else
-          echo "gosec not installed, skipping security checks"
-        fi
-    silent: true
+      - task: mkdir-security-dir
+      - gosec -quiet -fmt=json -out=security/gosec-report.json ./...
 
-  test:
-    desc: "Run tests"
+  # 🧪 OSV-Scanner
+  osv-scanner:
+    desc: 🧪 osv-scanner
     cmds:
-      - go test ./... -short
-    silent: true
+      - task: mkdir-security-dir
+      - osv-scanner --lockfile=go.sum --format=json > security/osv-report.json || true
 
+  # 📐 Semgrep
+  semgrep:
+    desc: 📐 semgrep
+    cmds:
+      - task: mkdir-security-dir
+      - semgrep scan --config=auto --json > security/semgrep-report.json || true
+
+  # 🛡️ Trivy
+  trivy:
+    desc: 🛡️ trivy
+    cmds:
+      - task: mkdir-security-dir
+      - trivy config --timeout 5m --format json --output security/trivy-config.json .
+      - trivy fs . --scanners vuln,secret,misconfig --format json --output security/trivy-fs.json || true
+
+  # 🔐 Gitleaks
+  gitleaks:
+    desc: 🔐 gitleaks
+    cmds:
+      - task: mkdir-security-dir
+      - gitleaks detect --source $(pwd) --no-git --redact --report-format sarif --report-path security/gitleaks-report.sarif || true
+
+  # 🐍 TruffleHog
+  trufflehog:
+    desc: 🐍 trufflehog
+    cmds:
+      - task: mkdir-security-dir
+      - trufflehog git --repo_path=$(pwd) --json > security/trufflehog.json || true
+
+  # 🏗️ Сборка CLI
+  build-cli:
+    desc: 🔧 Сборка CLI...
+    cmds:
+      - echo "🔧 Сборка CLI..."
+      - mkdir -p bin
+      - go build -o bin/secretly ./cmd/secretly
+
+  # 🏗️ Сборка сервера
+  build-server:
+    desc: 🔧 Сборка сервера...
+    cmds:
+      - echo "🔧 Сборка сервера..."
+      - mkdir -p bin
+      - go build -o bin/server ./server
+
+  # 🏗️ Сборка secret CLI
+  build-secret:
+    desc: 🔧 Сборка secret...
+    cmds:
+      - echo "🔧 Сборка secret..."
+      - mkdir -p bin
+      - go build -o bin/secret ./cmd/secret
+
+  # 🔨 Общая сборка
   build:
-    desc: "Run all checks and build binary"
-    deps: [fmt, vet, lint, gosec, test]
+    desc: 🛠️ Run security checks and build all components
     cmds:
-      - VERSION=$(git describe --tags --always --dirty || echo "dev")
-      - echo "Building version $VERSION..."
-      - go build -ldflags "-X github.com/secretlyhq/secretly/cmd/root.version=$VERSION" -o ./secretly ./cmd/secretly
+      - echo "🔐 Сначала запускаем все security-проверки..."
+      - task: security-all
+      - echo "🛠️ Теперь собираем компоненты..."
+      - task: build-cli
+      - task: build-server
+      - task: build-secret

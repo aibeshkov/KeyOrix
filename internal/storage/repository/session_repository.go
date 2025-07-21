@@ -21,22 +21,22 @@ func NewSessionRepository(db *gorm.DB) SessionRepository {
 	return &sessionRepo{db}
 }
 
-// Create добавляет новую сессию в базу
+// Create adds a new session to the database
 func (r *sessionRepo) Create(session *models.Session) error {
 	return r.db.Create(session).Error
 }
 
-// GetByToken возвращает сессию по токену
+// GetByToken returns a session by token
 func (r *sessionRepo) GetByToken(token string) (*models.Session, error) {
 	var session models.Session
-	err := r.db.Where("token = ?", token).First(&session).Error
+	err := r.db.Where("session_token = ?", token).First(&session).Error
 	if err != nil {
 		return nil, err
 	}
 	return &session, nil
 }
 
-// DeleteExpired удаляет все сессии с истекшим сроком действия
+// DeleteExpired deletes all expired sessions
 func (r *sessionRepo) DeleteExpired() error {
 	return r.db.Where("expires_at < ?", time.Now()).Delete(&models.Session{}).Error
 }
