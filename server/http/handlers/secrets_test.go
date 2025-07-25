@@ -139,7 +139,7 @@ func TestSecretHandler_CreateSecret(t *testing.T) {
 			name:      "missing required fields",
 			authToken: "valid-token",
 			requestBody: map[string]interface{}{
-				"name": "",
+				"name":  "",
 				"value": "secret-value",
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -213,7 +213,7 @@ func TestSecretHandler_CreateSecret(t *testing.T) {
 
 				assert.Contains(t, response, "data")
 				assert.Contains(t, response, "message")
-				
+
 				data := response["data"].(map[string]interface{})
 				assert.Contains(t, data, "id")
 				assert.Contains(t, data, "name")
@@ -461,7 +461,7 @@ func TestSecretHandler_DeleteSecret(t *testing.T) {
 // Helper function to add authentication context
 func addAuthContext(ctx context.Context, token string) context.Context {
 	var userCtx *middleware.UserContext
-	
+
 	switch token {
 	case "valid-token":
 		userCtx = &middleware.UserContext{
@@ -488,16 +488,14 @@ func addAuthContext(ctx context.Context, token string) context.Context {
 			},
 		}
 	}
-	
+
 	if userCtx != nil {
 		// Use the same context key as the middleware
 		return context.WithValue(ctx, middleware.GetUserContextKey(), userCtx)
 	}
-	
+
 	return ctx
 }
-
-
 
 // GetUserContextKey returns the context key for user context (for testing)
 func GetUserContextKey() interface{} {
@@ -506,6 +504,7 @@ func GetUserContextKey() interface{} {
 
 // Define the context key for testing (must match middleware)
 type contextKey string
+
 const userContextKey contextKey = "user"
 
 // Benchmark tests
@@ -542,7 +541,7 @@ func BenchmarkSecretHandler_CreateSecret(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var body bytes.Buffer
 		_ = json.NewEncoder(&body).Encode(requestBody)
-		
+
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/secrets", &body)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer valid-token")

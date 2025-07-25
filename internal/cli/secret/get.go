@@ -1,12 +1,14 @@
 package secret
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/secretlyhq/secretly/internal/config"
-	"github.com/secretlyhq/secretly/internal/services"
-	"github.com/secretlyhq/secretly/internal/storage/repository"
+	"github.com/secretlyhq/secretly/internal/core"
+	"github.com/secretlyhq/secretly/internal/storage/local"
+	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -59,46 +61,39 @@ func runGet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	// Initialize service
-	repo := repository.NewSecretRepository(db)
-	service := services.NewSecretService(repo, &cfg.Storage.Encryption, ".", db, cfg)
-
-	var secretID uint
-
-	// Get secret ID
-	if getID != 0 {
-		secretID = getID
-	} else {
-		// Find by name
-		secret, err := repo.GetByName(getName, getNamespace, getZone, getEnv)
-		if err != nil {
-			return fmt.Errorf("secret not found: %w", err)
-		}
-		secretID = secret.ID
+	// Auto-migrate models (ensure tables exist)
+	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
-	if getShowValue {
-		// Get secret with value
-		response, err := service.GetSecretValue(secretID)
-		if err != nil {
-			return fmt.Errorf("failed to get secret value: %w", err)
-		}
+	// Initialize storage and core service
+	storage := local.NewLocalStorage(db)
+	service := core.NewSecretlyCore(storage)
 
-		displaySecretWithValue(response)
-	} else {
-		// Get secret metadata only
-		response, err := service.GetSecret(secretID)
+	ctx := context.Background()
+	var secret *models.SecretNode
+
+	// Get secret by ID or name
+	if getID != 0 {
+		secret, err = service.GetSecret(ctx, getID)
 		if err != nil {
 			return fmt.Errorf("failed to get secret: %w", err)
 		}
-
-		displaySecret(response)
+	} else {
+		// Find by name using storage interface
+		secret, err = storage.GetSecretByName(ctx, getName, getNamespace, getZone, getEnv)
+		if err != nil {
+			return fmt.Errorf("secret not found: %w", err)
+		}
 	}
+
+	// Display secret information
+	displaySecret(secret)
 
 	return nil
 }
 
-func displaySecret(secret *services.SecretResponse) {
+func displaySecret(secret *models.SecretNode) {
 	fmt.Printf("🔐 Secret Information\n")
 	fmt.Printf("====================\n")
 	fmt.Printf("ID: %d\n", secret.ID)
@@ -111,7 +106,6 @@ func displaySecret(secret *services.SecretResponse) {
 	fmt.Printf("Created By: %s\n", secret.CreatedBy)
 	fmt.Printf("Created: %s\n", secret.CreatedAt.Format(time.RFC3339))
 	fmt.Printf("Updated: %s\n", secret.UpdatedAt.Format(time.RFC3339))
-	fmt.Printf("Versions: %d\n", secret.VersionCount)
 
 	if secret.MaxReads != nil {
 		fmt.Printf("Max Reads: %d\n", *secret.MaxReads)
@@ -124,38 +118,14 @@ func displaySecret(secret *services.SecretResponse) {
 		}
 	}
 
-	fmt.Printf("\n💡 Use --show-value to display the decrypted value\n")
-}
-
-func displaySecretWithValue(secret *services.SecretValueResponse) {
-	displaySecret(&secret.SecretResponse)
-
-	fmt.Printf("\n🔓 Decrypted Value\n")
-	fmt.Printf("==================\n")
-
-	// Check if value looks like binary data
-	if isBinaryData(secret.Value) {
-		fmt.Printf("Value: <binary data, %d bytes>\n", len(secret.Value))
-		fmt.Printf("Hex: %x\n", secret.Value)
+	if getShowValue {
+		fmt.Printf("\n🔓 Decrypted Value\n")
+		fmt.Printf("==================\n")
+		fmt.Printf("⚠️  Note: Value decryption not yet implemented in new architecture\n")
+		fmt.Printf("💡 This will be added in the next phase\n")
 	} else {
-		fmt.Printf("Value: %s\n", string(secret.Value))
+		fmt.Printf("\n💡 Use --show-value to display the decrypted value\n")
 	}
-
-	fmt.Printf("Size: %d bytes\n", len(secret.Value))
 }
 
-func isBinaryData(data []byte) bool {
-	// Simple heuristic: if more than 10% of bytes are non-printable, consider it binary
-	nonPrintable := 0
-	for _, b := range data {
-		if b < 32 && b != 9 && b != 10 && b != 13 { // Not tab, newline, or carriage return
-			nonPrintable++
-		}
-	}
 
-	if len(data) == 0 {
-		return false
-	}
-
-	return float64(nonPrintable)/float64(len(data)) > 0.1
-}

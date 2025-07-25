@@ -1,12 +1,15 @@
 package secret
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/secretlyhq/secretly/internal/config"
-	"github.com/secretlyhq/secretly/internal/services"
-	"github.com/secretlyhq/secretly/internal/storage/repository"
+	"github.com/secretlyhq/secretly/internal/core"
+	coreStorage "github.com/secretlyhq/secretly/internal/core/storage"
+	"github.com/secretlyhq/secretly/internal/storage/local"
+	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -47,7 +50,7 @@ func init() {
 
 func runList(cmd *cobra.Command, args []string) error {
 	// Load configuration
-	cfg, err := config.Load("secretly.yaml")
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -58,22 +61,35 @@ func runList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	// Initialize service
-	repo := repository.NewSecretRepository(db)
-	service := services.NewSecretService(repo, &cfg.Storage.Encryption, ".", db, cfg)
-
-	// Build list options
-	opts := &services.ListOptions{
-		NamespaceID:   listNamespace,
-		ZoneID:        listZone,
-		EnvironmentID: listEnv,
-		Limit:         listLimit,
-		Offset:        listOffset,
-		Search:        listSearch,
+	// Auto-migrate models (ensure tables exist)
+	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
+	// Initialize storage and core service
+	storageImpl := local.NewLocalStorage(db)
+	service := core.NewSecretlyCore(storageImpl)
+
+	// Create context
+	ctx := context.Background()
+
+	// Build filter options
+	namespaceID := listNamespace
+	zoneID := listZone
+	environmentID := listEnv
+	filter := &coreStorage.SecretFilter{
+		NamespaceID:   &namespaceID,
+		ZoneID:        &zoneID,
+		EnvironmentID: &environmentID,
+		Page:          (listOffset / listLimit) + 1,
+		PageSize:      listLimit,
+	}
+
+	// Note: Search functionality would need to be implemented in the storage layer
+	// For now, we'll list all secrets and can add search filtering later
+
 	// Get secrets
-	secrets, total, err := service.ListSecrets(opts)
+	secrets, total, err := service.ListSecrets(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("failed to list secrets: %w", err)
 	}
@@ -81,9 +97,9 @@ func runList(cmd *cobra.Command, args []string) error {
 	// Display results
 	switch listFormat {
 	case "json":
-		displaySecretsJSON(secrets, total, opts)
+		displaySecretsJSON(secrets, total, filter)
 	case "table":
-		displaySecretsTable(secrets, total, opts)
+		displaySecretsTable(secrets, total, filter)
 	default:
 		return fmt.Errorf("unsupported format: %s (use 'table' or 'json')", listFormat)
 	}
@@ -91,15 +107,17 @@ func runList(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func displaySecretsTable(secrets []services.SecretResponse, total int64, opts *services.ListOptions) {
+func displaySecretsTable(secrets []*models.SecretNode, total int64, filter *coreStorage.SecretFilter) {
 	fmt.Printf("🔐 Secrets List\n")
 	fmt.Printf("===============\n")
 
-	if opts.Search != "" {
-		fmt.Printf("Search: %s\n", opts.Search)
+	if listSearch != "" {
+		fmt.Printf("Search: %s (note: search filtering not yet implemented)\n", listSearch)
 	}
-	fmt.Printf("Namespace: %d, Zone: %d, Environment: %d\n", opts.NamespaceID, opts.ZoneID, opts.EnvironmentID)
-	fmt.Printf("Total: %d, Showing: %d (offset: %d, limit: %d)\n\n", total, len(secrets), opts.Offset, opts.Limit)
+	fmt.Printf("Namespace: %d, Zone: %d, Environment: %d\n", *filter.NamespaceID, *filter.ZoneID, *filter.EnvironmentID)
+	
+	offset := (filter.Page - 1) * filter.PageSize
+	fmt.Printf("Total: %d, Showing: %d (offset: %d, limit: %d)\n\n", total, len(secrets), offset, filter.PageSize)
 
 	if len(secrets) == 0 {
 		fmt.Printf("No secrets found.\n")
@@ -107,10 +125,10 @@ func displaySecretsTable(secrets []services.SecretResponse, total int64, opts *s
 	}
 
 	// Table header
-	fmt.Printf("%-5s %-20s %-12s %-8s %-8s %-20s %-20s\n",
-		"ID", "NAME", "TYPE", "VERSIONS", "STATUS", "CREATED", "EXPIRES")
-	fmt.Printf("%-5s %-20s %-12s %-8s %-8s %-20s %-20s\n",
-		"-----", "--------------------", "------------", "--------", "--------", "--------------------", "--------------------")
+	fmt.Printf("%-5s %-20s %-12s %-8s %-20s %-20s\n",
+		"ID", "NAME", "TYPE", "STATUS", "CREATED", "EXPIRES")
+	fmt.Printf("%-5s %-20s %-12s %-8s %-20s %-20s\n",
+		"-----", "--------------------", "------------", "--------", "--------------------", "--------------------")
 
 	// Table rows
 	for _, secret := range secrets {
@@ -122,34 +140,35 @@ func displaySecretsTable(secrets []services.SecretResponse, total int64, opts *s
 			}
 		}
 
-		fmt.Printf("%-5d %-20s %-12s %-8d %-8s %-20s %-20s\n",
+		fmt.Printf("%-5d %-20s %-12s %-8s %-20s %-20s\n",
 			secret.ID,
 			truncateString(secret.Name, 20),
 			truncateString(secret.Type, 12),
-			secret.VersionCount,
 			secret.Status,
 			secret.CreatedAt.Format("2006-01-02 15:04"),
 			truncateString(expires, 20))
 	}
 
 	// Pagination info
-	if total > int64(opts.Limit) {
+	if total > int64(filter.PageSize) {
 		fmt.Printf("\n📄 Pagination: Showing %d-%d of %d total\n",
-			opts.Offset+1,
-			min(opts.Offset+len(secrets), int(total)),
+			offset+1,
+			min(offset+len(secrets), int(total)),
 			total)
 
-		if opts.Offset+opts.Limit < int(total) {
-			fmt.Printf("💡 Use --offset %d to see more results\n", opts.Offset+opts.Limit)
+		if offset+filter.PageSize < int(total) {
+			fmt.Printf("💡 Use --offset %d to see more results\n", offset+filter.PageSize)
 		}
 	}
 }
 
-func displaySecretsJSON(secrets []services.SecretResponse, total int64, opts *services.ListOptions) {
+func displaySecretsJSON(secrets []*models.SecretNode, total int64, filter *coreStorage.SecretFilter) {
+	offset := (filter.Page - 1) * filter.PageSize
+	
 	fmt.Printf("{\n")
 	fmt.Printf("  \"total\": %d,\n", total)
-	fmt.Printf("  \"offset\": %d,\n", opts.Offset)
-	fmt.Printf("  \"limit\": %d,\n", opts.Limit)
+	fmt.Printf("  \"offset\": %d,\n", offset)
+	fmt.Printf("  \"limit\": %d,\n", filter.PageSize)
 	fmt.Printf("  \"count\": %d,\n", len(secrets))
 	fmt.Printf("  \"secrets\": [\n")
 
@@ -165,17 +184,17 @@ func displaySecretsJSON(secrets []services.SecretResponse, total int64, opts *se
 		fmt.Printf("      \"created_by\": \"%s\",\n", secret.CreatedBy)
 		fmt.Printf("      \"created_at\": \"%s\",\n", secret.CreatedAt.Format(time.RFC3339))
 		fmt.Printf("      \"updated_at\": \"%s\",\n", secret.UpdatedAt.Format(time.RFC3339))
-		fmt.Printf("      \"version_count\": %d", secret.VersionCount)
 
 		if secret.MaxReads != nil {
-			fmt.Printf(",\n      \"max_reads\": %d", *secret.MaxReads)
+			fmt.Printf("      \"max_reads\": %d,\n", *secret.MaxReads)
 		}
 
 		if secret.Expiration != nil {
-			fmt.Printf(",\n      \"expiration\": \"%s\"", secret.Expiration.Format(time.RFC3339))
+			fmt.Printf("      \"expiration\": \"%s\",\n", secret.Expiration.Format(time.RFC3339))
 		}
 
-		fmt.Printf("\n    }")
+		fmt.Printf("      \"tags\": []\n") // Tags field can be added later
+		fmt.Printf("    }")
 		if i < len(secrets)-1 {
 			fmt.Printf(",")
 		}

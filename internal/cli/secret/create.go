@@ -3,6 +3,7 @@ package secret
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -13,8 +14,9 @@ import (
 	"time"
 
 	"github.com/secretlyhq/secretly/internal/config"
-	"github.com/secretlyhq/secretly/internal/services"
-	"github.com/secretlyhq/secretly/internal/storage/repository"
+	"github.com/secretlyhq/secretly/internal/core"
+	"github.com/secretlyhq/secretly/internal/storage/local"
+	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 	"gorm.io/driver/sqlite"
@@ -64,10 +66,15 @@ func runCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	repo := repository.NewSecretRepository(db)
-	service := services.NewSecretService(repo, &cfg.Storage.Encryption, ".", db, cfg)
+	// Auto-migrate models (ensure tables exist)
+	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
 
-	var req *services.SecretCreateRequest
+	storage := local.NewLocalStorage(db)
+	service := core.NewSecretlyCore(storage)
+
+	var req *core.CreateSecretRequest
 	if createInteractive {
 		req, err = interactiveCreate()
 	} else {
@@ -77,7 +84,8 @@ func runCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	secret, err := service.CreateSecret(req)
+	ctx := context.Background()
+	secret, err := service.CreateSecret(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to create secret: %w", err)
 	}
@@ -97,7 +105,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func buildCreateRequest() (*services.SecretCreateRequest, error) {
+func buildCreateRequest() (*core.CreateSecretRequest, error) {
 	if createName == "" {
 		return nil, errors.New("secret name is required (use --name)")
 	}
@@ -127,7 +135,7 @@ func buildCreateRequest() (*services.SecretCreateRequest, error) {
 		return nil, errors.New("secret value is required (use --value or --from-file)")
 	}
 
-	req := &services.SecretCreateRequest{
+	req := &core.CreateSecretRequest{
 		Name:          createName,
 		Value:         value,
 		Type:          createType,
@@ -152,7 +160,7 @@ func buildCreateRequest() (*services.SecretCreateRequest, error) {
 	return req, nil
 }
 
-func interactiveCreate() (*services.SecretCreateRequest, error) {
+func interactiveCreate() (*core.CreateSecretRequest, error) {
 	reader := bufio.NewReader(os.Stdin)
 
 	ask := func(prompt string, defaultVal string) string {
@@ -204,7 +212,7 @@ func interactiveCreate() (*services.SecretCreateRequest, error) {
 		return nil, errors.New("secret value is required")
 	}
 
-	req := &services.SecretCreateRequest{
+	req := &core.CreateSecretRequest{
 		Name:          name,
 		Type:          secretType,
 		NamespaceID:   namespaceID,

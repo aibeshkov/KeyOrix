@@ -28,6 +28,30 @@ Demonstrates the complete encryption functionality:
 
 **Run**: `go run examples/encryption/main.go`
 
+### 3. 🏗️ [New Architecture](new-architecture/)
+**File**: `new-architecture/main.go`
+
+Demonstrates the new clean architecture with core package:
+- Core service initialization
+- Clean separation of concerns
+- Modern Go patterns
+- Unified storage interface
+
+**Run**: `go run examples/new-architecture/main.go`
+
+### 4. 🔐 [Secret CRUD Operations](secret_crud/)
+**File**: `secret_crud/main.go`
+
+Demonstrates comprehensive secret management operations using the new core package:
+- Creating secrets with metadata
+- Retrieving secret information
+- Updating existing secrets
+- Listing and filtering secrets
+- Working with temporary secrets
+- Best practices for secret management
+
+**Run**: `go run examples/secret_crud/main.go`
+
 ## Getting Started
 
 ### Prerequisites
@@ -52,6 +76,12 @@ go run examples/system_init/main.go
 
 # Encryption example (self-contained)
 go run examples/encryption/main.go
+
+# New architecture example
+go run examples/new-architecture/main.go
+
+# Secret CRUD operations example
+go run examples/secret_crud/main.go
 ```
 
 ## Example Structure
@@ -62,8 +92,13 @@ examples/
 ├── system_init/
 │   ├── main.go                 # System initialization demo
 │   └── README.md               # Detailed documentation
-└── encryption/
-    ├── main.go                 # Encryption functionality demo
+├── encryption/
+│   ├── main.go                 # Encryption functionality demo
+│   └── README.md               # Detailed documentation
+├── new-architecture/
+│   └── main.go                 # New architecture demonstration
+└── secret_crud/
+    ├── main.go                 # Secret CRUD operations demo
     └── README.md               # Detailed documentation
 ```
 

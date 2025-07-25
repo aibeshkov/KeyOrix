@@ -47,7 +47,7 @@ func CORS(config CORSConfig) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
-			
+
 			// Check if origin is allowed
 			if origin != "" && isOriginAllowed(origin, config.AllowedOrigins) {
 				w.Header().Set("Access-Control-Allow-Origin", origin)

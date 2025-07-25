@@ -168,13 +168,13 @@ func validateToken(token string) (*UserContext, error) {
 func unauthorizedResponse(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
-	
+
 	response := map[string]interface{}{
 		"error":   "Unauthorized",
 		"message": message,
 		"code":    http.StatusUnauthorized,
 	}
-	
+
 	_ = json.NewEncoder(w).Encode(response)
 }
 
@@ -182,13 +182,13 @@ func unauthorizedResponse(w http.ResponseWriter, message string) {
 func forbiddenResponse(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
-	
+
 	response := map[string]interface{}{
 		"error":   "Forbidden",
 		"message": message,
 		"code":    http.StatusForbidden,
 	}
-	
+
 	_ = json.NewEncoder(w).Encode(response)
 }
 

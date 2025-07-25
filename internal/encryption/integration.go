@@ -248,5 +248,3 @@ func (se *SecretEncryption) ValidateEncryption() error {
 
 	return se.service.ValidateKeyFiles()
 }
-
-

@@ -14,8 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
-
 func setupAuthEncryptionTest(t *testing.T) (*AuthEncryption, *gorm.DB, func()) {
 	// Create temporary directory for test
 	tempDir, err := os.MkdirTemp("", "auth_encryption_test")
@@ -80,7 +78,7 @@ func TestAuthEncryption_ClientSecret(t *testing.T) {
 			encryptedData, metadata, err := authEnc.EncryptClientSecret(tt.clientSecret)
 			require.NoError(t, err)
 			assert.NotEmpty(t, encryptedData)
-			
+
 			// When encryption is disabled, metadata will be nil
 			if authEnc.service.IsEnabled() {
 				assert.NotEmpty(t, metadata)
@@ -104,7 +102,7 @@ func TestAuthEncryption_SessionToken(t *testing.T) {
 	encryptedData, metadata, err := authEnc.EncryptSessionToken(sessionToken)
 	require.NoError(t, err)
 	assert.NotEmpty(t, encryptedData)
-	
+
 	// When encryption is disabled, metadata will be nil
 	if authEnc.service.IsEnabled() {
 		assert.NotEmpty(t, metadata)
@@ -126,7 +124,7 @@ func TestAuthEncryption_APIToken(t *testing.T) {
 	encryptedData, metadata, err := authEnc.EncryptAPIToken(apiToken)
 	require.NoError(t, err)
 	assert.NotEmpty(t, encryptedData)
-	
+
 	// When encryption is disabled, metadata will be nil
 	if authEnc.service.IsEnabled() {
 		assert.NotEmpty(t, metadata)
@@ -148,7 +146,7 @@ func TestAuthEncryption_PasswordResetToken(t *testing.T) {
 	encryptedData, metadata, err := authEnc.EncryptPasswordResetToken(resetToken)
 	require.NoError(t, err)
 	assert.NotEmpty(t, encryptedData)
-	
+
 	// When encryption is disabled, metadata will be nil
 	if authEnc.service.IsEnabled() {
 		assert.NotEmpty(t, metadata)
@@ -186,7 +184,7 @@ func TestAuthEncryption_StoreEncryptedAPIClient(t *testing.T) {
 
 	assert.Equal(t, "Test Client", storedClient.Name)
 	assert.NotEmpty(t, storedClient.EncryptedClientSecret)
-	
+
 	// When encryption is disabled, metadata will be empty
 	if authEnc.service.IsEnabled() {
 		assert.NotEmpty(t, storedClient.ClientSecretMetadata)
@@ -222,7 +220,7 @@ func TestAuthEncryption_StoreEncryptedSession(t *testing.T) {
 
 	assert.Equal(t, uint(1), storedSession.UserID)
 	assert.NotEmpty(t, storedSession.EncryptedSessionToken)
-	
+
 	// When encryption is disabled, metadata will be empty
 	if authEnc.service.IsEnabled() {
 		assert.NotEmpty(t, storedSession.SessionTokenMetadata)
@@ -299,11 +297,11 @@ func TestAuthEncryption_KeyRotation(t *testing.T) {
 
 	// Create test data
 	client := &models.APIClient{
-		Name:        "Test Client",
-		ClientID:    "test-client-rotation",
-		Scopes:      "read",
-		IsActive:    true,
-		CreatedAt:   time.Now(),
+		Name:      "Test Client",
+		ClientID:  "test-client-rotation",
+		Scopes:    "read",
+		IsActive:  true,
+		CreatedAt: time.Now(),
 	}
 
 	clientSecret := "secret-for-rotation"
@@ -319,7 +317,7 @@ func TestAuthEncryption_KeyRotation(t *testing.T) {
 	if !authEnc.service.IsEnabled() {
 		t.Skip("Skipping key rotation test when encryption is disabled")
 	}
-	
+
 	// Rotate keys (this would normally involve key manager rotation)
 	// For this test, we'll simulate by re-encrypting with the same key
 	err = authEnc.RotateAuthEncryption()
@@ -339,7 +337,7 @@ func TestAuthEncryption_GetStatus(t *testing.T) {
 
 	assert.Contains(t, status, "enabled")
 	assert.Contains(t, status, "initialized")
-	
+
 	// When encryption is disabled in config, it should be reflected in status
 	assert.False(t, status["enabled"].(bool))
 	// When encryption is disabled, initialized should also be false

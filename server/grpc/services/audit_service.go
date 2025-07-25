@@ -78,6 +78,6 @@ func (s *AuditService) StreamAuditLogs(req interface{}, stream interface{}) erro
 	// TODO: Implement audit log streaming
 	// This would be a server-side streaming RPC
 	log.Println("gRPC StreamAuditLogs called")
-	
+
 	return status.Errorf(codes.Unimplemented, "Method not implemented yet")
 }

@@ -297,7 +297,7 @@ func TestSystemEndpointsConcurrency(t *testing.T) {
 				go func() {
 					for j := 0; j < numRequests; j++ {
 						req := httptest.NewRequest(http.MethodGet, tt.path, nil)
-						
+
 						// Add auth context for protected endpoints
 						if tt.path != "/health" {
 							req.Header.Set("Authorization", "Bearer valid-token")
@@ -375,10 +375,10 @@ func TestMetricsMemoryUsage(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		w := httptest.NewRecorder()
 		GetMetrics(w, req)
-		
+
 		// Verify response is valid
 		assert.Equal(t, http.StatusOK, w.Code)
-		
+
 		var response map[string]interface{}
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		require.NoError(t, err)

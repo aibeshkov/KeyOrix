@@ -8,12 +8,13 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/secretlyhq/secretly/internal/config"
+	"github.com/secretlyhq/secretly/internal/core"
 	"github.com/secretlyhq/secretly/server/http/handlers"
 	customMiddleware "github.com/secretlyhq/secretly/server/middleware"
 )
 
 // NewRouter creates and configures the HTTP router
-func NewRouter(cfg *config.Config) (http.Handler, error) {
+func NewRouter(cfg *config.Config, coreService *core.SecretlyCore) (http.Handler, error) {
 	r := chi.NewRouter()
 
 	// Apply middleware
@@ -34,9 +35,14 @@ func NewRouter(cfg *config.Config) (http.Handler, error) {
 	}))
 
 	// Initialize handlers
-	secretHandler, err := handlers.NewSecretHandler()
+	secretHandler, err := handlers.NewSecretHandler(coreService)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create secret handler: %w", err)
+	}
+	
+	shareHandler, err := handlers.NewShareHandler(coreService)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create share handler: %w", err)
 	}
 
 	// Health check endpoint
@@ -53,14 +59,31 @@ func NewRouter(cfg *config.Config) (http.Handler, error) {
 			r.With(customMiddleware.RequirePermission("secrets.read")).Get("/", secretHandler.ListSecrets)
 			r.With(customMiddleware.RequirePermission("secrets.read")).Get("/{id}", secretHandler.GetSecret)
 			r.With(customMiddleware.RequirePermission("secrets.read")).Get("/{id}/versions", secretHandler.GetSecretVersions)
-			
+			r.With(customMiddleware.RequirePermission("secrets.read")).Get("/{id}/shares", shareHandler.ListSecretShares)
+
 			// Require secrets.write permission for write operations
 			r.With(customMiddleware.RequirePermission("secrets.write")).Post("/", secretHandler.CreateSecret)
 			r.With(customMiddleware.RequirePermission("secrets.write")).Put("/{id}", secretHandler.UpdateSecret)
-			
+			r.With(customMiddleware.RequirePermission("secrets.write")).Post("/{id}/share", shareHandler.ShareSecret)
+
 			// Require secrets.delete permission for delete operations
 			r.With(customMiddleware.RequirePermission("secrets.delete")).Delete("/{id}", secretHandler.DeleteSecret)
 		})
+		
+		// Shares endpoints
+		r.Route("/shares", func(r chi.Router) {
+			// Require secrets.read permission for GET operations
+			r.With(customMiddleware.RequirePermission("secrets.read")).Get("/", shareHandler.ListShares)
+			
+			// Require secrets.write permission for write operations
+			r.With(customMiddleware.RequirePermission("secrets.write")).Put("/{id}", shareHandler.UpdateSharePermission)
+			
+			// Require secrets.delete permission for delete operations
+			r.With(customMiddleware.RequirePermission("secrets.write")).Delete("/{id}", shareHandler.RevokeShare)
+		})
+		
+		// Shared secrets endpoint
+		r.With(customMiddleware.RequirePermission("secrets.read")).Get("/shared-secrets", shareHandler.ListSharedSecrets)
 
 		// Users endpoints (RBAC)
 		r.Route("/users", func(r chi.Router) {

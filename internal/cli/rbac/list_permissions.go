@@ -1,10 +1,16 @@
 package rbac
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/secretlyhq/secretly/internal/services"
+	"github.com/secretlyhq/secretly/internal/config"
+	"github.com/secretlyhq/secretly/internal/core"
+	"github.com/secretlyhq/secretly/internal/storage/local"
+	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/spf13/cobra"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var listPermissionsCmd = &cobra.Command{
@@ -22,12 +28,31 @@ func init() {
 }
 
 func runListPermissions(cmd *cobra.Command, args []string) error {
-	rbacService, err := services.NewRBACService()
+	// Load configuration
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		return fmt.Errorf("failed to initialize RBAC service: %w", err)
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	permissions, err := rbacService.ListUserPermissions(listPermissionsUserEmail)
+	// Connect to database
+	db, err := gorm.Open(sqlite.Open(cfg.Storage.Database.Path), &gorm.Config{})
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// Auto-migrate models
+	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}, &models.User{}, &models.Role{}); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
+
+	// Initialize storage and core service
+	storage := local.NewLocalStorage(db)
+	service := core.NewSecretlyCore(storage)
+
+	// Create context
+	ctx := context.Background()
+
+	permissions, err := service.ListUserPermissionsByEmail(ctx, listPermissionsUserEmail)
 	if err != nil {
 		return fmt.Errorf("failed to list user permissions: %w", err)
 	}
@@ -40,16 +65,13 @@ func runListPermissions(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Permissions for user '%s':\n", listPermissionsUserEmail)
 
 	// Group permissions by resource
-	resourceMap := make(map[string][]services.Permission)
+	resourceMap := make(map[string][]interface{})
 	for _, perm := range permissions {
-		resourceMap[perm.Resource] = append(resourceMap[perm.Resource], perm)
+		resourceMap["permissions"] = append(resourceMap["permissions"], perm)
 	}
 
-	for resource, perms := range resourceMap {
-		fmt.Printf("\n📁 %s:\n", resource)
-		for _, perm := range perms {
-			fmt.Printf("  - %s (%s): %s\n", perm.Name, perm.Action, perm.Description)
-		}
+	for _, perm := range permissions {
+		fmt.Printf("  - Permission: %+v\n", perm)
 	}
 
 	return nil

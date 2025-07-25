@@ -689,6 +689,261 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
+  /secrets/{id}/share:
+    post:
+      summary: Share secret
+      description: Share a secret with a user or group
+      tags: [Secret Sharing]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID to share
+          schema:
+            type: integer
+          example: 123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareSecretRequest'
+      responses:
+        '201':
+          description: Secret shared successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ShareRecord'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+  /secrets/{id}/shares:
+    get:
+      summary: List secret shares
+      description: List all shares for a specific secret (owner only)
+      tags: [Secret Sharing]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID
+          schema:
+            type: integer
+          example: 123
+      responses:
+        '200':
+          description: List of shares for the secret
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          shares:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/ShareRecord'
+                          total:
+                            type: integer
+                            example: 5
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /secrets/{id}/self-share:
+    delete:
+      summary: Remove self from share
+      description: Allow users to remove themselves from a shared secret
+      tags: [Secret Sharing]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID
+          schema:
+            type: integer
+          example: 123
+      responses:
+        '204':
+          description: Successfully removed from share
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /shares:
+    get:
+      summary: List user shares
+      description: List all shares created by the current user
+      tags: [Secret Sharing]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: secret_id
+          in: query
+          description: Filter by secret ID
+          schema:
+            type: integer
+          example: 123
+        - name: recipient_id
+          in: query
+          description: Filter by recipient ID
+          schema:
+            type: integer
+          example: 456
+        - name: permission
+          in: query
+          description: Filter by permission level
+          schema:
+            type: string
+            enum: [read, write]
+          example: read
+      responses:
+        '200':
+          description: List of shares created by the user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          shares:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/ExtendedShareRecord'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /shares/{id}:
+    put:
+      summary: Update share permission
+      description: Update the permission level for an existing share (owner only)
+      tags: [Secret Sharing]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Share ID
+          schema:
+            type: integer
+          example: 789
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateShareRequest'
+      responses:
+        '200':
+          description: Share permission updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ShareRecord'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      summary: Revoke share
+      description: Revoke access to a shared secret (owner only)
+      tags: [Secret Sharing]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Share ID
+          schema:
+            type: integer
+          example: 789
+      responses:
+        '204':
+          description: Share revoked successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /shared-secrets:
+    get:
+      summary: List shared secrets
+      description: List all secrets shared with the current user
+      tags: [Secret Sharing]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: permission
+          in: query
+          description: Filter by permission level
+          schema:
+            type: string
+            enum: [read, write]
+          example: read
+        - name: owner_id
+          in: query
+          description: Filter by owner ID
+          schema:
+            type: integer
+          example: 123
+      responses:
+        '200':
+          description: List of secrets shared with the user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          secrets:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/SharedSecret'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
 tags:
   - name: System
     description: System health and information endpoints
@@ -699,4 +954,488 @@ tags:
   - name: Roles
     description: Role management operations (RBAC)
   - name: Audit
-    description: Audit log operations
+    description: Audit log operations   
+ # Secret Sharing schemas
+    ShareRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the share
+          example: 456
+        secret_id:
+          type: integer
+          description: ID of the shared secret
+          example: 123
+        owner_id:
+          type: integer
+          description: ID of the secret owner
+          example: 1
+        recipient_id:
+          type: integer
+          description: ID of the recipient (user or group)
+          example: 789
+        is_group:
+          type: boolean
+          description: Whether the recipient is a group
+          example: false
+        permission:
+          type: string
+          enum: [read, write]
+          description: Permission level granted
+          example: read
+        created_at:
+          type: string
+          format: date-time
+          description: When the share was created
+          example: "2025-07-22T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the share was last updated
+          example: "2025-07-22T10:30:00Z"
+      required:
+        - id
+        - secret_id
+        - owner_id
+        - recipient_id
+        - permission
+        - created_at
+        - updated_at
+
+    ShareRequest:
+      type: object
+      properties:
+        recipient_id:
+          type: integer
+          description: ID of the user or group to share with
+          example: 789
+        is_group:
+          type: boolean
+          description: Whether the recipient is a group
+          default: false
+          example: false
+        permission:
+          type: string
+          enum: [read, write]
+          description: Permission level to grant
+          example: read
+      required:
+        - recipient_id
+        - permission
+
+    UpdateShareRequest:
+      type: object
+      properties:
+        permission:
+          type: string
+          enum: [read, write]
+          description: New permission level
+          example: write
+      required:
+        - permission
+
+    SharedSecret:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Secret ID
+          example: 123
+        name:
+          type: string
+          description: Secret name
+          example: "Database Password"
+        type:
+          type: string
+          description: Secret type
+          example: "password"
+        owner_id:
+          type: integer
+          description: ID of the secret owner
+          example: 1
+        owner_name:
+          type: string
+          description: Username of the secret owner
+          example: "admin"
+        permission:
+          type: string
+          enum: [read, write]
+          description: Your permission level
+          example: read
+        share_id:
+          type: integer
+          description: ID of the share record
+          example: 456
+        shared_at:
+          type: string
+          format: date-time
+          description: When the secret was shared with you
+          example: "2025-07-22T10:30:00Z"
+        namespace:
+          type: string
+          description: Secret namespace
+          example: "production"
+        zone:
+          type: string
+          description: Secret zone
+          example: "us-west-2"
+        environment:
+          type: string
+          description: Secret environment
+          example: "prod"
+
+paths:
+  # Secret Sharing endpoints
+  /secrets/{id}/share:
+    post:
+      tags:
+        - Secret Sharing
+      summary: Share a secret
+      description: Share a secret with a user or group
+      operationId: shareSecret
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID
+          schema:
+            type: integer
+            example: 123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareRequest'
+            examples:
+              share_with_user:
+                summary: Share with user (read permission)
+                value:
+                  recipient_id: 789
+                  is_group: false
+                  permission: read
+              share_with_group:
+                summary: Share with group (write permission)
+                value:
+                  recipient_id: 10
+                  is_group: true
+                  permission: write
+      responses:
+        '201':
+          description: Secret shared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Secret shared successfully"
+                  data:
+                    $ref: '#/components/schemas/ShareRecord'
+        '400':
+          description: Invalid request data
+        '403':
+          description: Insufficient permissions
+        '404':
+          description: Secret not found
+        '409':
+          description: Share already exists
+
+  /secrets/{id}/shares:
+    get:
+      tags:
+        - Secret Sharing
+      summary: List secret shares
+      description: Get all shares for a specific secret
+      operationId: listSecretShares
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: List of shares for the secret
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      shares:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ShareRecord'
+                      total:
+                        type: integer
+                        example: 1
+        '403':
+          description: Insufficient permissions
+        '404':
+          description: Secret not found
+
+  /secrets/{id}/self-share:
+    delete:
+      tags:
+        - Secret Sharing
+      summary: Remove self from share
+      description: Remove yourself from a shared secret
+      operationId: removeSelfFromShare
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Secret ID
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '204':
+          description: Successfully removed from share
+        '403':
+          description: Insufficient permissions
+        '404':
+          description: Secret or share not found
+
+  /shares:
+    get:
+      tags:
+        - Secret Sharing
+      summary: List user shares
+      description: Get all shares created by the current user
+      operationId: listUserShares
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: page_size
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: secret_id
+          in: query
+          description: Filter by secret ID
+          schema:
+            type: integer
+            example: 123
+        - name: permission
+          in: query
+          description: Filter by permission level
+          schema:
+            type: string
+            enum: [read, write]
+            example: read
+      responses:
+        '200':
+          description: List of user shares
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      shares:
+                        type: array
+                        items:
+                          allOf:
+                            - $ref: '#/components/schemas/ShareRecord'
+                            - type: object
+                              properties:
+                                secret_name:
+                                  type: string
+                                  example: "Database Password"
+                                recipient_name:
+                                  type: string
+                                  example: "john.doe"
+                      total:
+                        type: integer
+                        example: 1
+                      page:
+                        type: integer
+                        example: 1
+                      page_size:
+                        type: integer
+                        example: 20
+                      total_pages:
+                        type: integer
+                        example: 1
+
+  /shares/{id}:
+    put:
+      tags:
+        - Secret Sharing
+      summary: Update share permission
+      description: Update the permission level for an existing share
+      operationId: updateSharePermission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Share ID
+          schema:
+            type: integer
+            example: 456
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateShareRequest'
+            example:
+              permission: write
+      responses:
+        '200':
+          description: Share permission updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Share permission updated successfully"
+                  data:
+                    $ref: '#/components/schemas/ShareRecord'
+        '400':
+          description: Invalid request data
+        '403':
+          description: Insufficient permissions
+        '404':
+          description: Share not found
+
+    delete:
+      tags:
+        - Secret Sharing
+      summary: Revoke share
+      description: Remove access to a shared secret
+      operationId: revokeShare
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Share ID
+          schema:
+            type: integer
+            example: 456
+      responses:
+        '204':
+          description: Share revoked successfully
+        '403':
+          description: Insufficient permissions
+        '404':
+          description: Share not found
+
+  /shared-secrets:
+    get:
+      tags:
+        - Secret Sharing
+      summary: List shared secrets
+      description: Get all secrets shared with the current user
+      operationId: listSharedSecrets
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: page_size
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: permission
+          in: query
+          description: Filter by permission level
+          schema:
+            type: string
+            enum: [read, write]
+            example: read
+        - name: owner_id
+          in: query
+          description: Filter by owner ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: List of shared secrets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      secrets:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SharedSecret'
+                      total:
+                        type: integer
+                        example: 1
+                      page:
+                        type: integer
+                        example: 1
+                      page_size:
+                        type: integer
+                        example: 20
+                      total_pages:
+                        type: integer
+                        example: 1
+
+tags:
+  - name: Secret Sharing
+    description: |
+      Secret sharing operations allow users to securely share secrets with other users or groups.
+      
+      ## Permission Levels
+      - **read**: View secret metadata and value
+      - **write**: Read permissions plus ability to modify secret content
+      
+      ## Group Sharing
+      Share with groups to automatically grant access to all group members.
+      
+      ## Security
+      All shared secrets maintain end-to-end encryption. Recipients get their own encrypted copy.

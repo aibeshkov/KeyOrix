@@ -328,20 +328,20 @@ func TestRequireRole(t *testing.T) {
 
 func TestGetUserFromContext(t *testing.T) {
 	tests := []struct {
-		name        string
-		setupCtx    func() context.Context
-		expectUser  bool
-		expectedID  uint
+		name         string
+		setupCtx     func() context.Context
+		expectUser   bool
+		expectedID   uint
 		expectedName string
 	}{
 		{
 			name: "valid user context",
 			setupCtx: func() context.Context {
 				userCtx := &UserContext{
-					UserID:   123,
-					Username: "testuser",
-					Email:    "test@example.com",
-					Roles:    []string{"user"},
+					UserID:      123,
+					Username:    "testuser",
+					Email:       "test@example.com",
+					Roles:       []string{"user"},
 					Permissions: []string{"secrets.read"},
 				}
 				return context.WithValue(context.Background(), userContextKey, userCtx)
@@ -395,10 +395,10 @@ func TestGetUserFromContext(t *testing.T) {
 
 func TestValidateToken(t *testing.T) {
 	tests := []struct {
-		name          string
-		token         string
-		expectError   bool
-		expectedUser  *UserContext
+		name         string
+		token        string
+		expectError  bool
+		expectedUser *UserContext
 	}{
 		{
 			name:        "valid admin token",
@@ -477,9 +477,9 @@ func TestMiddlewareChaining(t *testing.T) {
 			assert.Equal(t, "admin", userCtx.Username)
 			w.WriteHeader(http.StatusOK)
 		})
-		
+
 		handler := authMiddleware(permissionMiddleware(testHandler))
-		
+
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		req.Header.Set("Authorization", "Bearer valid-token")
 		w := httptest.NewRecorder()
@@ -495,9 +495,9 @@ func TestMiddlewareChaining(t *testing.T) {
 			assert.Equal(t, "testuser", userCtx.Username)
 			w.WriteHeader(http.StatusOK)
 		})
-		
+
 		handler := authMiddleware(permissionMiddleware(testHandler))
-		
+
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		req.Header.Set("Authorization", "Bearer test-token") // test-token has secrets.read
 		w := httptest.NewRecorder()
@@ -510,9 +510,9 @@ func TestMiddlewareChaining(t *testing.T) {
 		testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			t.Error("Handler should not be called for invalid token")
 		})
-		
+
 		handler := authMiddleware(permissionMiddleware(testHandler))
-		
+
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		req.Header.Set("Authorization", "Bearer invalid-token")
 		w := httptest.NewRecorder()
@@ -550,8 +550,8 @@ func BenchmarkRequirePermission(b *testing.B) {
 	handler := permissionMiddleware(testHandler)
 
 	userCtx := &UserContext{
-		UserID:   1,
-		Username: "admin",
+		UserID:      1,
+		Username:    "admin",
 		Permissions: []string{"secrets.read", "secrets.write"},
 	}
 

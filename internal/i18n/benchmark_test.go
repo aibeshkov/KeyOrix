@@ -23,7 +23,7 @@ func BenchmarkInitialize(b *testing.B) {
 		// Reset global state for each iteration
 		globalLocalizer = nil
 		once = sync.Once{}
-		
+
 		err := Initialize(cfg)
 		if err != nil {
 			b.Fatalf("Initialize failed: %v", err)
@@ -36,7 +36,7 @@ func BenchmarkLocalize(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -62,7 +62,7 @@ func BenchmarkLocalizeWithTemplateData(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -92,7 +92,7 @@ func BenchmarkTFunction(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -116,7 +116,7 @@ func BenchmarkSetLanguage(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -144,7 +144,7 @@ func BenchmarkConcurrentLocalize(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -172,7 +172,7 @@ func BenchmarkConcurrentLanguageSwitching(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -205,7 +205,7 @@ func BenchmarkMultipleLanguages(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -234,7 +234,7 @@ func BenchmarkMissingTranslation(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -260,7 +260,7 @@ func BenchmarkLargeTemplateData(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -274,7 +274,7 @@ func BenchmarkLargeTemplateData(b *testing.B) {
 	}
 
 	localizer := GetLocalizer()
-	
+
 	// Create large template data
 	templateData := make(map[string]interface{})
 	for i := 0; i < 100; i++ {
@@ -292,7 +292,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -329,14 +329,14 @@ func BenchmarkStartupTime(b *testing.B) {
 		// Reset global state
 		globalLocalizer = nil
 		once = sync.Once{}
-		
+
 		start := time.Now()
 		err := Initialize(cfg)
 		if err != nil {
 			b.Fatalf("Initialize failed: %v", err)
 		}
 		duration := time.Since(start)
-		
+
 		// Report custom metric
 		b.ReportMetric(float64(duration.Nanoseconds()), "ns/init")
 	}
@@ -347,7 +347,7 @@ func BenchmarkRealisticUsage(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",
@@ -361,7 +361,7 @@ func BenchmarkRealisticUsage(b *testing.B) {
 	}
 
 	localizer := GetLocalizer()
-	
+
 	// Common message types used in a typical application
 	messages := []string{
 		"Welcome",
@@ -388,7 +388,7 @@ func BenchmarkTFunctionVsLocalize(b *testing.B) {
 	// Setup
 	globalLocalizer = nil
 	once = sync.Once{}
-	
+
 	cfg := &config.Config{
 		Locale: config.LocaleConfig{
 			Language:         "en",

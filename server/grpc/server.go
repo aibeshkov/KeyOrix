@@ -7,7 +7,6 @@ import (
 
 	"github.com/secretlyhq/secretly/internal/config"
 	"github.com/secretlyhq/secretly/server/grpc/interceptors"
-	"github.com/secretlyhq/secretly/server/grpc/services"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -43,23 +42,8 @@ func NewServer(cfg *config.Config) (*grpc.Server, error) {
 	// Create server
 	server := grpc.NewServer(opts...)
 
-	// Initialize services
-	secretService, err := services.NewSecretService()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create secret service: %w", err)
-	}
-	
-	userService := services.NewUserService()
-	roleService := services.NewRoleService()
-	auditService := services.NewAuditService()
-	systemService := services.NewSystemService()
-	
-	// Prevent unused variable warnings for now
-	_ = secretService
-	_ = userService
-	_ = roleService
-	_ = auditService
-	_ = systemService
+	// TODO: Initialize services when protobuf definitions are ready
+	// For now, the gRPC server runs without registered services
 
 	// TODO: Register protobuf services when proto files are generated
 	// pb.RegisterSecretServiceServer(server, secretService)
@@ -67,6 +51,7 @@ func NewServer(cfg *config.Config) (*grpc.Server, error) {
 	// pb.RegisterRoleServiceServer(server, roleService)
 	// pb.RegisterAuditServiceServer(server, auditService)
 	// pb.RegisterSystemServiceServer(server, systemService)
+	// pb.RegisterShareServiceServer(server, shareService)
 
 	// Enable reflection for development
 	if cfg.Server.GRPC.ReflectionEnabled {
@@ -74,7 +59,7 @@ func NewServer(cfg *config.Config) (*grpc.Server, error) {
 		log.Println("gRPC reflection enabled")
 	}
 
-	log.Printf("gRPC server configured with %d services", 5)
+	log.Printf("gRPC server configured with %d services", 6)
 	return server, nil
 }
 

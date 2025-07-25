@@ -12,13 +12,13 @@ import (
 
 // User represents a user in the system
 type User struct {
-	ID          uint      `json:"id"`
-	Username    string    `json:"username"`
-	Email       string    `json:"email"`
-	DisplayName string    `json:"display_name"`
-	Active      bool      `json:"active"`
-	CreatedAt   string    `json:"created_at"`
-	UpdatedAt   string    `json:"updated_at"`
+	ID          uint   `json:"id"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	DisplayName string `json:"display_name"`
+	Active      bool   `json:"active"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
 }
 
 // Role represents a role in the system
@@ -129,10 +129,10 @@ func ListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"users":      users,
-		"page":       page,
-		"page_size":  pageSize,
-		"total":      len(users),
+		"users":       users,
+		"page":        page,
+		"page_size":   pageSize,
+		"total":       len(users),
 		"total_pages": 1,
 	}
 

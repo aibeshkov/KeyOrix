@@ -51,8 +51,8 @@ func TestSecretGRPCService_CreateSecret(t *testing.T) {
 		{
 			name: "successful creation with admin user",
 			userCtx: &interceptors.UserContext{
-				UserID:   1,
-				Username: "admin",
+				UserID:      1,
+				Username:    "admin",
 				Permissions: []string{"secrets.write"},
 			},
 			request: &CreateSecretRequest{
@@ -80,8 +80,8 @@ func TestSecretGRPCService_CreateSecret(t *testing.T) {
 		{
 			name: "insufficient permissions",
 			userCtx: &interceptors.UserContext{
-				UserID:   2,
-				Username: "user",
+				UserID:      2,
+				Username:    "user",
 				Permissions: []string{"secrets.read"}, // missing secrets.write
 			},
 			request: &CreateSecretRequest{
@@ -97,8 +97,8 @@ func TestSecretGRPCService_CreateSecret(t *testing.T) {
 		{
 			name: "missing required fields",
 			userCtx: &interceptors.UserContext{
-				UserID:   1,
-				Username: "admin",
+				UserID:      1,
+				Username:    "admin",
 				Permissions: []string{"secrets.write"},
 			},
 			request: &CreateSecretRequest{
@@ -159,8 +159,8 @@ func TestSecretGRPCService_GetSecret(t *testing.T) {
 		{
 			name: "successful get with admin user",
 			userCtx: &interceptors.UserContext{
-				UserID:   1,
-				Username: "admin",
+				UserID:      1,
+				Username:    "admin",
 				Permissions: []string{"secrets.read"},
 			},
 			request: &GetSecretRequest{
@@ -180,11 +180,11 @@ func TestSecretGRPCService_GetSecret(t *testing.T) {
 		{
 			name: "insufficient permissions",
 			userCtx: &interceptors.UserContext{
-				UserID:   2,
-				Username: "user",
+				UserID:      2,
+				Username:    "user",
 				Permissions: []string{"users.read"}, // missing secrets.read
 			},
-			request: &GetSecretRequest{Id: 1},
+			request:        &GetSecretRequest{Id: 1},
 			expectedError:  codes.PermissionDenied,
 			expectResponse: false,
 		},
@@ -223,8 +223,8 @@ func BenchmarkSecretGRPCService_CreateSecret(b *testing.B) {
 	require.NoError(b, err)
 
 	userCtx := &interceptors.UserContext{
-		UserID:   1,
-		Username: "admin",
+		UserID:      1,
+		Username:    "admin",
 		Permissions: []string{"secrets.write"},
 	}
 
@@ -244,4 +244,3 @@ func BenchmarkSecretGRPCService_CreateSecret(b *testing.B) {
 		_, _ = service.CreateSecret(ctx, request)
 	}
 }
-

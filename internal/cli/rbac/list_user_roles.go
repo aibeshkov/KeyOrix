@@ -1,10 +1,16 @@
 package rbac
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/secretlyhq/secretly/internal/services"
+	"github.com/secretlyhq/secretly/internal/config"
+	"github.com/secretlyhq/secretly/internal/core"
+	"github.com/secretlyhq/secretly/internal/storage/local"
+	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/spf13/cobra"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var listUserRolesCmd = &cobra.Command{
@@ -22,12 +28,31 @@ func init() {
 }
 
 func runListUserRoles(cmd *cobra.Command, args []string) error {
-	rbacService, err := services.NewRBACService()
+	// Load configuration
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		return fmt.Errorf("failed to initialize RBAC service: %w", err)
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	roles, err := rbacService.ListUserRoles(listUserEmail)
+	// Connect to database
+	db, err := gorm.Open(sqlite.Open(cfg.Storage.Database.Path), &gorm.Config{})
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// Auto-migrate models
+	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}, &models.User{}, &models.Role{}); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
+
+	// Initialize storage and core service
+	storage := local.NewLocalStorage(db)
+	service := core.NewSecretlyCore(storage)
+
+	// Create context
+	ctx := context.Background()
+
+	roles, err := service.ListUserRolesByEmail(ctx, listUserEmail)
 	if err != nil {
 		return fmt.Errorf("failed to list user roles: %w", err)
 	}

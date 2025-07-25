@@ -1,10 +1,15 @@
 package rbac
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/secretlyhq/secretly/internal/services"
+	"github.com/secretlyhq/secretly/internal/config"
+	"github.com/secretlyhq/secretly/internal/core"
+	"github.com/secretlyhq/secretly/internal/storage/local"
 	"github.com/spf13/cobra"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var removeRoleCmd = &cobra.Command{
@@ -28,12 +33,27 @@ func init() {
 }
 
 func runRemoveRole(cmd *cobra.Command, args []string) error {
-	rbacService, err := services.NewRBACService()
+	// Load configuration
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		return fmt.Errorf("failed to initialize RBAC service: %w", err)
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	err = rbacService.RemoveRoleFromUser(removeUserEmail, removeRoleName)
+	// Initialize database
+	db, err := gorm.Open(sqlite.Open(cfg.Storage.Database.Path), &gorm.Config{})
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// Create storage layer
+	storage := local.NewLocalStorage(db)
+
+	// Create core service
+	coreService := core.NewSecretlyCore(storage)
+
+	// Use core service to remove role
+	ctx := context.Background()
+	err = coreService.RemoveRoleFromUser(ctx, removeUserEmail, removeRoleName)
 	if err != nil {
 		return fmt.Errorf("failed to remove role: %w", err)
 	}

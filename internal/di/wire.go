@@ -8,7 +8,7 @@ import (
 
 func InitializeApp() (string, error) {
 	fmt.Println("InitializeApp() called")
-	conf, err := config.Load("configs/config.yaml")
+	conf, err := config.Load("secretly.yaml")
 	if err != nil {
 		fmt.Println("Error loading config:", err)
 		return "", err

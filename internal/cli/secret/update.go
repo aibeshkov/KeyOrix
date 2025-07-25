@@ -2,6 +2,7 @@ package secret
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -12,8 +13,9 @@ import (
 	"time"
 
 	"github.com/secretlyhq/secretly/internal/config"
-	"github.com/secretlyhq/secretly/internal/services"
-	"github.com/secretlyhq/secretly/internal/storage/repository"
+	"github.com/secretlyhq/secretly/internal/core"
+	"github.com/secretlyhq/secretly/internal/storage/local"
+	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 	"gorm.io/driver/sqlite"
@@ -60,7 +62,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return errors.New("secret ID is required (use --id)")
 	}
 
-	cfg, err := config.Load("secretly.yaml")
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -70,10 +72,19 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	repo := repository.NewSecretRepository(db)
-	service := services.NewSecretService(repo, &cfg.Storage.Encryption, ".", db, cfg)
+	// Auto-migrate models (ensure tables exist)
+	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
 
-	current, err := service.GetSecret(updateID)
+	// Initialize storage and core service
+	storageImpl := local.NewLocalStorage(db)
+	service := core.NewSecretlyCore(storageImpl)
+
+	// Create context
+	ctx := context.Background()
+
+	current, err := service.GetSecret(ctx, updateID)
 	if err != nil {
 		return fmt.Errorf("failed to get current secret: %w", err)
 	}
@@ -88,7 +99,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println()
 
-	var req *services.SecretUpdateRequest
+	var req *core.UpdateSecretRequest
 
 	if updateInteractive {
 		req, err = interactiveUpdate(current)
@@ -102,7 +113,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	response, err := service.UpdateSecret(req)
+	response, err := service.UpdateSecret(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to update secret: %w", err)
 	}
@@ -112,7 +123,6 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Name: %s\n", response.Name)
 	fmt.Printf("Type: %s\n", response.Type)
 	fmt.Printf("Updated: %s\n", response.UpdatedAt.Format(time.RFC3339))
-	fmt.Printf("Versions: %d\n", response.VersionCount)
 
 	if len(req.Value) > 0 {
 		fmt.Printf("🔐 New encrypted version created\n")
@@ -121,8 +131,8 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func buildUpdateRequest() (*services.SecretUpdateRequest, error) {
-	req := &services.SecretUpdateRequest{
+func buildUpdateRequest() (*core.UpdateSecretRequest, error) {
+	req := &core.UpdateSecretRequest{
 		ID:        updateID,
 		UpdatedBy: "cli-user",
 	}
@@ -148,8 +158,9 @@ func buildUpdateRequest() (*services.SecretUpdateRequest, error) {
 		req.Value = []byte(updateValue)
 	}
 
+	// Note: Type updates are not supported in the current core implementation
 	if updateType != "" {
-		req.Type = updateType
+		fmt.Printf("Warning: Type updates are not currently supported, ignoring --type flag\n")
 	}
 
 	if updateMaxReads >= 0 {
@@ -169,7 +180,7 @@ func buildUpdateRequest() (*services.SecretUpdateRequest, error) {
 	return req, nil
 }
 
-func interactiveUpdate(current *services.SecretResponse) (*services.SecretUpdateRequest, error) {
+func interactiveUpdate(current *models.SecretNode) (*core.UpdateSecretRequest, error) {
 	reader := bufio.NewReader(os.Stdin)
 
 	ask := func(prompt string, defaultVal string) string {
@@ -200,7 +211,7 @@ func interactiveUpdate(current *services.SecretResponse) (*services.SecretUpdate
 	fmt.Println("🔄 Interactive Secret Update")
 	fmt.Println("============================")
 
-	req := &services.SecretUpdateRequest{
+	req := &core.UpdateSecretRequest{
 		ID:        updateID,
 		UpdatedBy: "cli-user",
 	}
@@ -219,7 +230,7 @@ func interactiveUpdate(current *services.SecretResponse) (*services.SecretUpdate
 
 	newType := ask("Secret type", current.Type)
 	if newType != "" && newType != current.Type {
-		req.Type = newType
+		fmt.Printf("Warning: Type updates are not currently supported, ignoring type change\n")
 	}
 
 	currentMaxReads := "unlimited"

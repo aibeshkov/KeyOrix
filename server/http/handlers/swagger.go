@@ -9,7 +9,7 @@ import (
 func SwaggerHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := strings.TrimPrefix(r.URL.Path, "/swagger/")
-		
+
 		switch path {
 		case "", "index.html":
 			serveSwaggerIndex(w, r)

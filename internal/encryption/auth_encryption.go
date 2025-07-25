@@ -331,8 +331,8 @@ func (ae *AuthEncryption) rotateAPIClientSecrets() error {
 
 		// Update in database
 		updates := map[string]interface{}{
-			"encrypted_client_secret":   encryptedSecret,
-			"client_secret_metadata":    datatypes.JSON(metadata),
+			"encrypted_client_secret": encryptedSecret,
+			"client_secret_metadata":  datatypes.JSON(metadata),
 		}
 
 		if err := ae.db.Model(&client).Updates(updates).Error; err != nil {
@@ -365,8 +365,8 @@ func (ae *AuthEncryption) rotateSessionTokens() error {
 
 		// Update in database
 		updates := map[string]interface{}{
-			"encrypted_session_token":   encryptedToken,
-			"session_token_metadata":    datatypes.JSON(metadata),
+			"encrypted_session_token": encryptedToken,
+			"session_token_metadata":  datatypes.JSON(metadata),
 		}
 
 		if err := ae.db.Model(&session).Updates(updates).Error; err != nil {
@@ -399,8 +399,8 @@ func (ae *AuthEncryption) rotateAPITokens() error {
 
 		// Update in database
 		updates := map[string]interface{}{
-			"encrypted_token":   encryptedToken,
-			"token_metadata":    datatypes.JSON(metadata),
+			"encrypted_token": encryptedToken,
+			"token_metadata":  datatypes.JSON(metadata),
 		}
 
 		if err := ae.db.Model(&token).Updates(updates).Error; err != nil {

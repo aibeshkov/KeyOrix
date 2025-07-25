@@ -21,13 +21,13 @@ func CustomLogger() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			
+
 			// Create a response writer wrapper to capture status code
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-			
+
 			// Get request ID if available
 			requestID := middleware.GetReqID(r.Context())
-			
+
 			// Get user context if available
 			var userID uint
 			var username string
@@ -35,13 +35,13 @@ func CustomLogger() func(next http.Handler) http.Handler {
 				userID = userCtx.UserID
 				username = userCtx.Username
 			}
-			
+
 			// Process request
 			next.ServeHTTP(ww, r)
-			
+
 			// Log request details
 			duration := time.Since(start)
-			
+
 			log.Printf(
 				"[%s] %s %s %d %s - User: %s(%d) - %s - %s",
 				requestID,
@@ -54,12 +54,12 @@ func CustomLogger() func(next http.Handler) http.Handler {
 				r.RemoteAddr,
 				r.UserAgent(),
 			)
-			
+
 			// Log slow requests (>1 second)
 			if duration > time.Second {
 				log.Printf("SLOW REQUEST: %s %s took %s", r.Method, r.URL.Path, duration)
 			}
-			
+
 			// Log errors
 			if ww.Status() >= 400 {
 				log.Printf("ERROR RESPONSE: %s %s returned %d", r.Method, r.URL.Path, ww.Status())

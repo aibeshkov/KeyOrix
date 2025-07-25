@@ -1,14 +1,15 @@
 package secret
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/secretlyhq/secretly/internal/config"
-	"github.com/secretlyhq/secretly/internal/services"
+	"github.com/secretlyhq/secretly/internal/core"
+	"github.com/secretlyhq/secretly/internal/storage/local"
 	"github.com/secretlyhq/secretly/internal/storage/models"
-	"github.com/secretlyhq/secretly/internal/storage/repository"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -41,7 +42,7 @@ func runVersions(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load configuration
-	cfg, err := config.Load("secretly.yaml")
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -52,18 +53,26 @@ func runVersions(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	// Initialize service
-	repo := repository.NewSecretRepository(db)
-	service := services.NewSecretService(repo, &cfg.Storage.Encryption, ".", db, cfg)
+	// Auto-migrate models (ensure tables exist)
+	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
+
+	// Initialize storage and core service
+	storageImpl := local.NewLocalStorage(db)
+	service := core.NewSecretlyCore(storageImpl)
+
+	// Create context
+	ctx := context.Background()
 
 	// Get secret info
-	secret, err := service.GetSecret(versionsID)
+	secret, err := service.GetSecret(ctx, versionsID)
 	if err != nil {
 		return fmt.Errorf("secret not found: %w", err)
 	}
 
 	// Get versions
-	versions, err := service.GetSecretVersions(versionsID)
+	versions, err := service.GetSecretVersions(ctx, versionsID)
 	if err != nil {
 		return fmt.Errorf("failed to get versions: %w", err)
 	}
@@ -81,7 +90,7 @@ func runVersions(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func displayVersionsTable(secret *services.SecretResponse, versions []models.SecretVersion) {
+func displayVersionsTable(secret *models.SecretNode, versions []*models.SecretVersion) {
 	fmt.Printf("📚 Secret Versions\n")
 	fmt.Printf("==================\n")
 	fmt.Printf("Secret: %s (ID: %d)\n", secret.Name, secret.ID)
@@ -128,7 +137,7 @@ func displayVersionsTable(secret *services.SecretResponse, versions []models.Sec
 	}
 }
 
-func displayVersionsJSON(secret *services.SecretResponse, versions []models.SecretVersion) {
+func displayVersionsJSON(secret *models.SecretNode, versions []*models.SecretVersion) {
 	fmt.Printf("{\n")
 	fmt.Printf("  \"secret\": {\n")
 	fmt.Printf("    \"id\": %d,\n", secret.ID)

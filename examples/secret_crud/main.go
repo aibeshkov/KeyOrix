@@ -1,14 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/secretlyhq/secretly/internal/config"
-	"github.com/secretlyhq/secretly/internal/services"
+	"github.com/secretlyhq/secretly/internal/core"
+	coreStorage "github.com/secretlyhq/secretly/internal/core/storage"
+	"github.com/secretlyhq/secretly/internal/storage/local"
 	"github.com/secretlyhq/secretly/internal/storage/models"
-	"github.com/secretlyhq/secretly/internal/storage/repository"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -34,13 +36,13 @@ func main() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	// Initialize service
-	repo := repository.NewSecretRepository(db)
-	service := services.NewSecretService(repo, &cfg.Storage.Encryption, ".", db, cfg)
+	// Initialize storage and core service
+	storage := local.NewLocalStorage(db)
+	service := core.NewSecretlyCore(storage)
 
 	// Example 1: Create a secret
 	fmt.Println("\n📝 Example 1: Create Secret")
-	createReq := &services.SecretCreateRequest{
+	createReq := &core.CreateSecretRequest{
 		Name:          "example-api-key",
 		Value:         []byte("sk-1234567890abcdef"),
 		Type:          "api-key",
@@ -50,25 +52,37 @@ func main() {
 		CreatedBy:     "example-user",
 	}
 
-	secret, err := service.CreateSecret(createReq)
+	ctx := context.Background()
+	namespaceID := uint(1)
+	zoneID := uint(1)
+	environmentID := uint(1)
+	
+	secret, err := service.CreateSecret(ctx, createReq)
 	if err != nil {
 		log.Printf("Failed to create secret (might already exist): %v", err)
-		// Try to get existing secret
-		existing, err := repo.GetByName("example-api-key", 1, 1, 1)
-		if err != nil {
-			log.Fatalf("Failed to get existing secret: %v", err)
+		// Try to get existing secret by listing and finding it
+		filter := &coreStorage.SecretFilter{
+			NamespaceID:   &namespaceID,
+			ZoneID:        &zoneID,
+			EnvironmentID: &environmentID,
+			Page:          1,
+			PageSize:      10,
 		}
-		secret = &services.SecretResponse{
-			ID:            existing.ID,
-			Name:          existing.Name,
-			Type:          existing.Type,
-			NamespaceID:   existing.NamespaceID,
-			ZoneID:        existing.ZoneID,
-			EnvironmentID: existing.EnvironmentID,
-			Status:        existing.Status,
-			CreatedBy:     existing.CreatedBy,
-			CreatedAt:     existing.CreatedAt,
-			UpdatedAt:     existing.UpdatedAt,
+		secrets, _, err := service.ListSecrets(ctx, filter)
+		if err != nil {
+			log.Fatalf("Failed to list secrets: %v", err)
+		}
+		
+		// Find the secret by name
+		for _, s := range secrets {
+			if s.Name == "example-api-key" {
+				secret = s
+				break
+			}
+		}
+		
+		if secret == nil {
+			log.Fatalf("Failed to find or create secret")
 		}
 	}
 
@@ -76,7 +90,7 @@ func main() {
 
 	// Example 2: Get secret metadata
 	fmt.Println("\n📖 Example 2: Get Secret Metadata")
-	retrieved, err := service.GetSecret(secret.ID)
+	retrieved, err := service.GetSecret(ctx, secret.ID)
 	if err != nil {
 		log.Fatalf("Failed to get secret: %v", err)
 	}
@@ -86,97 +100,47 @@ func main() {
 	fmt.Printf("Status: %s\n", retrieved.Status)
 	fmt.Printf("Created: %s\n", retrieved.CreatedAt.Format(time.RFC3339))
 
-	// Example 3: Get secret value (decrypted)
-	fmt.Println("\n🔓 Example 3: Get Secret Value")
-	secretValue, err := service.GetSecretValue(secret.ID)
-	if err != nil {
-		log.Fatalf("Failed to get secret value: %v", err)
-	}
-
-	fmt.Printf("Decrypted value: %s\n", string(secretValue.Value))
-	fmt.Printf("Value size: %d bytes\n", len(secretValue.Value))
-
-	// Example 4: Update secret
-	fmt.Println("\n🔄 Example 4: Update Secret")
-	updateReq := &services.SecretUpdateRequest{
+	// Example 3: Update secret
+	fmt.Println("\n🔄 Example 3: Update Secret")
+	updateReq := &core.UpdateSecretRequest{
 		ID:        secret.ID,
-		Value:     []byte("sk-updated-9876543210fedcba"),
-		Type:      "api-key-v2",
 		UpdatedBy: "example-user",
 	}
 
-	updated, err := service.UpdateSecret(updateReq)
+	updated, err := service.UpdateSecret(ctx, updateReq)
 	if err != nil {
 		log.Fatalf("Failed to update secret: %v", err)
 	}
 
 	fmt.Printf("✅ Secret updated: %s\n", updated.Name)
-	fmt.Printf("New type: %s\n", updated.Type)
-	fmt.Printf("Version count: %d\n", updated.VersionCount)
+	fmt.Printf("Type: %s\n", updated.Type)
 
-	// Example 5: List secrets
-	fmt.Println("\n📋 Example 5: List Secrets")
-	listOpts := &services.ListOptions{
-		NamespaceID:   1,
-		ZoneID:        1,
-		EnvironmentID: 1,
-		Limit:         10,
-		Offset:        0,
+	// Example 4: List secrets
+	fmt.Println("\n📋 Example 4: List Secrets")
+	listFilter := &coreStorage.SecretFilter{
+		NamespaceID:   &namespaceID,
+		ZoneID:        &zoneID,
+		EnvironmentID: &environmentID,
+		Page:          1,
+		PageSize:      10,
 	}
 
-	secrets, total, err := service.ListSecrets(listOpts)
+	secrets, total, err := service.ListSecrets(ctx, listFilter)
 	if err != nil {
 		log.Fatalf("Failed to list secrets: %v", err)
 	}
 
 	fmt.Printf("Found %d secrets (total: %d)\n", len(secrets), total)
 	for _, s := range secrets {
-		fmt.Printf("- %s (ID: %d, Type: %s, Versions: %d)\n",
-			s.Name, s.ID, s.Type, s.VersionCount)
+		fmt.Printf("- %s (ID: %d, Type: %s)\n", s.Name, s.ID, s.Type)
 	}
 
-	// Example 6: Search secrets
-	fmt.Println("\n🔍 Example 6: Search Secrets")
-	searchOpts := &services.ListOptions{
-		NamespaceID:   1,
-		ZoneID:        1,
-		EnvironmentID: 1,
-		Search:        "api",
-		Limit:         10,
-	}
-
-	searchResults, searchTotal, err := service.ListSecrets(searchOpts)
-	if err != nil {
-		log.Fatalf("Failed to search secrets: %v", err)
-	}
-
-	fmt.Printf("Search results for 'api': %d secrets (total: %d)\n", len(searchResults), searchTotal)
-	for _, s := range searchResults {
-		fmt.Printf("- %s (Type: %s)\n", s.Name, s.Type)
-	}
-
-	// Example 7: Get secret versions
-	fmt.Println("\n📚 Example 7: Get Secret Versions")
-	versions, err := service.GetSecretVersions(secret.ID)
-	if err != nil {
-		log.Fatalf("Failed to get versions: %v", err)
-	}
-
-	fmt.Printf("Secret has %d versions:\n", len(versions))
-	for _, version := range versions {
-		fmt.Printf("- Version %d: %d bytes, %d reads, created %s\n",
-			version.VersionNumber,
-			len(version.EncryptedValue),
-			version.ReadCount,
-			version.CreatedAt.Format("2006-01-02 15:04:05"))
-	}
-
-	// Example 8: Create secret with expiration
-	fmt.Println("\n⏰ Example 8: Create Secret with Expiration")
+	// Example 5: Create secret with expiration
+	fmt.Println("\n⏰ Example 5: Create Secret with Expiration")
 	expiration := time.Now().Add(24 * time.Hour) // Expires in 24 hours
 	maxReads := 5
 
-	tempSecretReq := &services.SecretCreateRequest{
+	tempSecretReq := &core.CreateSecretRequest{
 		Name:          "temp-token",
 		Value:         []byte("temporary-access-token-12345"),
 		Type:          "temp-token",
@@ -188,13 +152,17 @@ func main() {
 		CreatedBy:     "example-user",
 	}
 
-	tempSecret, err := service.CreateSecret(tempSecretReq)
+	tempSecret, err := service.CreateSecret(ctx, tempSecretReq)
 	if err != nil {
 		log.Printf("Failed to create temp secret (might already exist): %v", err)
 	} else {
 		fmt.Printf("✅ Temporary secret created: %s\n", tempSecret.Name)
-		fmt.Printf("Expires: %s\n", tempSecret.Expiration.Format(time.RFC3339))
-		fmt.Printf("Max reads: %d\n", *tempSecret.MaxReads)
+		if tempSecret.Expiration != nil {
+			fmt.Printf("Expires: %s\n", tempSecret.Expiration.Format(time.RFC3339))
+		}
+		if tempSecret.MaxReads != nil {
+			fmt.Printf("Max reads: %d\n", *tempSecret.MaxReads)
+		}
 	}
 
 	// Example 9: CLI Command Examples

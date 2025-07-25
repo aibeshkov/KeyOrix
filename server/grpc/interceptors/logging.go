@@ -13,7 +13,7 @@ import (
 func LoggingInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		start := time.Now()
-		
+
 		// Get client info
 		clientIP := "unknown"
 		if p, ok := peer.FromContext(ctx); ok {
@@ -22,7 +22,7 @@ func LoggingInterceptor() grpc.UnaryServerInterceptor {
 
 		// Call the handler
 		resp, err := handler(ctx, req)
-		
+
 		// Log the request
 		duration := time.Since(start)
 		status := "OK"
@@ -52,7 +52,7 @@ func LoggingInterceptor() grpc.UnaryServerInterceptor {
 func StreamLoggingInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		start := time.Now()
-		
+
 		// Get client info
 		clientIP := "unknown"
 		if p, ok := peer.FromContext(stream.Context()); ok {
@@ -61,7 +61,7 @@ func StreamLoggingInterceptor() grpc.StreamServerInterceptor {
 
 		// Call the handler
 		err := handler(srv, stream)
-		
+
 		// Log the stream
 		duration := time.Since(start)
 		status := "OK"

@@ -1,0 +1,510 @@
+package local
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/secretlyhq/secretly/internal/core/storage"
+	"github.com/secretlyhq/secretly/internal/i18n"
+	"github.com/secretlyhq/secretly/internal/storage/models"
+	"gorm.io/gorm"
+)
+
+// LocalStorage implements the Storage interface using direct database access
+// This is used when the CLI or server runs on the same host as the database
+type LocalStorage struct {
+	db *gorm.DB
+}
+
+// NewLocalStorage creates a new LocalStorage instance
+func NewLocalStorage(db *gorm.DB) *LocalStorage {
+	return &LocalStorage{
+		db: db,
+	}
+}
+
+// Secret Management Implementation
+
+// CreateSecret creates a new secret in the database
+func (ls *LocalStorage) CreateSecret(ctx context.Context, secret *models.SecretNode) (*models.SecretNode, error) {
+	if err := ls.db.WithContext(ctx).Create(secret).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return secret, nil
+}
+
+// GetSecret retrieves a secret by ID
+func (ls *LocalStorage) GetSecret(ctx context.Context, id uint) (*models.SecretNode, error) {
+	var secret models.SecretNode
+	if err := ls.db.WithContext(ctx).First(&secret, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("%s", i18n.T("ErrorSecretNotFound", nil))
+		}
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return &secret, nil
+}
+
+// GetSecretByName retrieves a secret by name and scope
+func (ls *LocalStorage) GetSecretByName(ctx context.Context, name string, namespaceID, zoneID, environmentID uint) (*models.SecretNode, error) {
+	var secret models.SecretNode
+	err := ls.db.WithContext(ctx).Where(
+		"name = ? AND namespace_id = ? AND zone_id = ? AND environment_id = ?",
+		name, namespaceID, zoneID, environmentID,
+	).First(&secret).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("%s", i18n.T("ErrorSecretNotFound", nil))
+		}
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return &secret, nil
+}
+
+// UpdateSecret updates an existing secret
+func (ls *LocalStorage) UpdateSecret(ctx context.Context, secret *models.SecretNode) (*models.SecretNode, error) {
+	if err := ls.db.WithContext(ctx).Save(secret).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return secret, nil
+}
+
+// DeleteSecret deletes a secret by ID
+func (ls *LocalStorage) DeleteSecret(ctx context.Context, id uint) error {
+	result := ls.db.WithContext(ctx).Delete(&models.SecretNode{}, id)
+	if result.Error != nil {
+		return fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("%s", i18n.T("ErrorSecretNotFound", nil))
+	}
+	return nil
+}
+
+// ListSecrets lists secrets with filtering and pagination
+func (ls *LocalStorage) ListSecrets(ctx context.Context, filter *storage.SecretFilter) ([]*models.SecretNode, int64, error) {
+	query := ls.db.WithContext(ctx).Model(&models.SecretNode{})
+
+	// Apply filters
+	if filter.NamespaceID != nil {
+		query = query.Where("namespace_id = ?", *filter.NamespaceID)
+	}
+	if filter.ZoneID != nil {
+		query = query.Where("zone_id = ?", *filter.ZoneID)
+	}
+	if filter.EnvironmentID != nil {
+		query = query.Where("environment_id = ?", *filter.EnvironmentID)
+	}
+	if filter.Type != nil {
+		query = query.Where("type = ?", *filter.Type)
+	}
+	if filter.CreatedBy != nil {
+		query = query.Where("created_by = ?", *filter.CreatedBy)
+	}
+	if filter.CreatedAfter != nil {
+		query = query.Where("created_at > ?", *filter.CreatedAfter)
+	}
+	if filter.CreatedBefore != nil {
+		query = query.Where("created_at < ?", *filter.CreatedBefore)
+	}
+
+	// Count total records
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+
+	// Apply pagination
+	offset := (filter.Page - 1) * filter.PageSize
+	query = query.Offset(offset).Limit(filter.PageSize)
+
+	// Execute query
+	var secrets []*models.SecretNode
+	if err := query.Find(&secrets).Error; err != nil {
+		return nil, 0, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+
+	return secrets, total, nil
+}
+
+// GetSecretVersions retrieves all versions of a secret
+func (ls *LocalStorage) GetSecretVersions(ctx context.Context, secretID uint) ([]*models.SecretVersion, error) {
+	var versions []*models.SecretVersion
+	if err := ls.db.WithContext(ctx).Where("secret_node_id = ?", secretID).Order("version_number DESC").Find(&versions).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return versions, nil
+}
+
+// CreateSecretVersion creates a new version of a secret
+func (ls *LocalStorage) CreateSecretVersion(ctx context.Context, version *models.SecretVersion) (*models.SecretVersion, error) {
+	if err := ls.db.WithContext(ctx).Create(version).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return version, nil
+}
+
+// GetLatestSecretVersion retrieves the latest version of a secret
+func (ls *LocalStorage) GetLatestSecretVersion(ctx context.Context, secretID uint) (*models.SecretVersion, error) {
+	var version models.SecretVersion
+	if err := ls.db.WithContext(ctx).Where("secret_node_id = ?", secretID).Order("version_number DESC").First(&version).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("%s", i18n.T("ErrorVersionNotFound", nil))
+		}
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return &version, nil
+}
+
+// IncrementSecretReadCount increments the read count for a secret version
+func (ls *LocalStorage) IncrementSecretReadCount(ctx context.Context, versionID uint) error {
+	if err := ls.db.WithContext(ctx).Model(&models.SecretVersion{}).Where("id = ?", versionID).UpdateColumn("read_count", gorm.Expr("read_count + 1")).Error; err != nil {
+		return fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return nil
+}
+
+// User Management Implementation
+
+// CreateUser creates a new user in the database
+func (ls *LocalStorage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
+	if err := ls.db.WithContext(ctx).Create(user).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return user, nil
+}
+
+// GetUser retrieves a user by ID
+func (ls *LocalStorage) GetUser(ctx context.Context, id uint) (*models.User, error) {
+	var user models.User
+	if err := ls.db.WithContext(ctx).First(&user, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("%s", i18n.T("ErrorUserNotFound", nil))
+		}
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return &user, nil
+}
+
+// GetUserByEmail retrieves a user by email
+func (ls *LocalStorage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	var user models.User
+	if err := ls.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("%s", i18n.T("ErrorUserNotFound", nil))
+		}
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return &user, nil
+}
+
+// UpdateUser updates an existing user
+func (ls *LocalStorage) UpdateUser(ctx context.Context, user *models.User) (*models.User, error) {
+	if err := ls.db.WithContext(ctx).Save(user).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return user, nil
+}
+
+// DeleteUser deletes a user by ID
+func (ls *LocalStorage) DeleteUser(ctx context.Context, id uint) error {
+	result := ls.db.WithContext(ctx).Delete(&models.User{}, id)
+	if result.Error != nil {
+		return fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("%s", i18n.T("ErrorUserNotFound", nil))
+	}
+	return nil
+}
+
+// ListUsers lists users with filtering and pagination
+func (ls *LocalStorage) ListUsers(ctx context.Context, filter *storage.UserFilter) ([]*models.User, int64, error) {
+	query := ls.db.WithContext(ctx).Model(&models.User{})
+
+	// Apply filters
+	if filter.Username != nil {
+		query = query.Where("username LIKE ?", "%"+*filter.Username+"%")
+	}
+	if filter.Email != nil {
+		query = query.Where("email LIKE ?", "%"+*filter.Email+"%")
+	}
+	if filter.IsActive != nil {
+		query = query.Where("is_active = ?", *filter.IsActive)
+	}
+	if filter.CreatedAfter != nil {
+		query = query.Where("created_at > ?", *filter.CreatedAfter)
+	}
+
+	// Count total records
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+
+	// Apply pagination
+	offset := (filter.Page - 1) * filter.PageSize
+	query = query.Offset(offset).Limit(filter.PageSize)
+
+	// Execute query
+	var users []*models.User
+	if err := query.Find(&users).Error; err != nil {
+		return nil, 0, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+
+	return users, total, nil
+}
+
+// Role Management Implementation
+
+// CreateRole creates a new role in the database
+func (ls *LocalStorage) CreateRole(ctx context.Context, role *models.Role) (*models.Role, error) {
+	if err := ls.db.WithContext(ctx).Create(role).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return role, nil
+}
+
+// GetRole retrieves a role by ID
+func (ls *LocalStorage) GetRole(ctx context.Context, id uint) (*models.Role, error) {
+	var role models.Role
+	if err := ls.db.WithContext(ctx).First(&role, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("%s", i18n.T("ErrorRoleNotFound", nil))
+		}
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return &role, nil
+}
+
+// GetRoleByName retrieves a role by name
+func (ls *LocalStorage) GetRoleByName(ctx context.Context, name string) (*models.Role, error) {
+	var role models.Role
+	if err := ls.db.WithContext(ctx).Where("name = ?", name).First(&role).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("%s", i18n.T("ErrorRoleNotFound", nil))
+		}
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return &role, nil
+}
+
+// UpdateRole updates an existing role
+func (ls *LocalStorage) UpdateRole(ctx context.Context, role *models.Role) (*models.Role, error) {
+	if err := ls.db.WithContext(ctx).Save(role).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return role, nil
+}
+
+// DeleteRole deletes a role by ID
+func (ls *LocalStorage) DeleteRole(ctx context.Context, id uint) error {
+	result := ls.db.WithContext(ctx).Delete(&models.Role{}, id)
+	if result.Error != nil {
+		return fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("%s", i18n.T("ErrorRoleNotFound", nil))
+	}
+	return nil
+}
+
+// ListRoles lists all roles
+func (ls *LocalStorage) ListRoles(ctx context.Context) ([]*models.Role, error) {
+	var roles []*models.Role
+	if err := ls.db.WithContext(ctx).Find(&roles).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return roles, nil
+}
+
+// RBAC Operations Implementation
+
+// AssignRole assigns a role to a user
+func (ls *LocalStorage) AssignRole(ctx context.Context, userID, roleID uint) error {
+	// Check if assignment already exists
+	var existing models.UserRole
+	err := ls.db.WithContext(ctx).Where("user_id = ? AND role_id = ?", userID, roleID).First(&existing).Error
+	if err == nil {
+		return fmt.Errorf("%s", i18n.T("ErrorRoleAlreadyAssigned", nil))
+	}
+	if err != gorm.ErrRecordNotFound {
+		return fmt.Errorf("%s: %w", i18n.T("ErrorInternalServer", nil), err)
+	}
+
+	// Create new assignment
+	userRole := models.UserRole{
+		UserID: userID,
+		RoleID: roleID,
+	}
+	if err := ls.db.WithContext(ctx).Create(&userRole).Error; err != nil {
+		return fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+
+	return nil
+}
+
+// RemoveRole removes a role from a user
+func (ls *LocalStorage) RemoveRole(ctx context.Context, userID, roleID uint) error {
+	result := ls.db.WithContext(ctx).Where("user_id = ? AND role_id = ?", userID, roleID).Delete(&models.UserRole{})
+	if result.Error != nil {
+		return fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("%s", i18n.T("ErrorRoleNotAssigned", nil))
+	}
+	return nil
+}
+
+// GetUserRoles retrieves all roles assigned to a user
+func (ls *LocalStorage) GetUserRoles(ctx context.Context, userID uint) ([]*models.Role, error) {
+	var roles []*models.Role
+	err := ls.db.WithContext(ctx).Table("roles").
+		Joins("JOIN user_roles ON roles.id = user_roles.role_id").
+		Where("user_roles.user_id = ?", userID).
+		Find(&roles).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return roles, nil
+}
+
+// CheckPermission checks if a user has a specific permission
+func (ls *LocalStorage) CheckPermission(ctx context.Context, userID uint, resource, action string) (bool, error) {
+	// This is a simplified implementation
+	// In a real system, you'd check against a permissions table
+	var count int64
+	err := ls.db.WithContext(ctx).Table("permissions").
+		Joins("JOIN role_permissions ON permissions.id = role_permissions.permission_id").
+		Joins("JOIN user_roles ON role_permissions.role_id = user_roles.role_id").
+		Where("user_roles.user_id = ? AND permissions.resource = ? AND permissions.action = ?", userID, resource, action).
+		Count(&count).Error
+
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", i18n.T("ErrorInternalServer", nil), err)
+	}
+
+	return count > 0, nil
+}
+
+// GetUserPermissions retrieves all permissions for a user
+func (ls *LocalStorage) GetUserPermissions(ctx context.Context, userID uint) ([]*storage.Permission, error) {
+	var permissions []*storage.Permission
+	err := ls.db.WithContext(ctx).Table("permissions").
+		Select("permissions.id, permissions.name, permissions.description, permissions.resource, permissions.action").
+		Joins("JOIN role_permissions ON permissions.id = role_permissions.permission_id").
+		Joins("JOIN user_roles ON role_permissions.role_id = user_roles.role_id").
+		Where("user_roles.user_id = ?", userID).
+		Group("permissions.id").
+		Find(&permissions).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+
+	return permissions, nil
+}
+
+// Placeholder implementations for remaining methods
+// These would be implemented based on your specific requirements
+
+func (ls *LocalStorage) LogAuditEvent(ctx context.Context, event *models.AuditEvent) error {
+	// Implementation would depend on your audit event model
+	return nil
+}
+
+func (ls *LocalStorage) GetAuditLogs(ctx context.Context, filter *storage.AuditFilter) ([]*models.AuditEvent, int64, error) {
+	// Implementation would depend on your audit event model
+	return nil, 0, nil
+}
+
+func (ls *LocalStorage) GetRBACAuditLogs(ctx context.Context, filter *storage.RBACAuditFilter) ([]*storage.RBACAuditLog, int64, error) {
+	// Implementation would depend on your RBAC audit model
+	return nil, 0, nil
+}
+
+func (ls *LocalStorage) CreateSession(ctx context.Context, session *models.Session) (*models.Session, error) {
+	if err := ls.db.WithContext(ctx).Create(session).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return session, nil
+}
+
+func (ls *LocalStorage) GetSession(ctx context.Context, token string) (*models.Session, error) {
+	var session models.Session
+	if err := ls.db.WithContext(ctx).Where("token = ?", token).First(&session).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("%s", i18n.T("ErrorNotFound", nil))
+		}
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return &session, nil
+}
+
+func (ls *LocalStorage) DeleteSession(ctx context.Context, id uint) error {
+	result := ls.db.WithContext(ctx).Delete(&models.Session{}, id)
+	if result.Error != nil {
+		return fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), result.Error)
+	}
+	return nil
+}
+
+func (ls *LocalStorage) CleanupExpiredSessions(ctx context.Context) error {
+	result := ls.db.WithContext(ctx).Where("expires_at < ?", time.Now()).Delete(&models.Session{})
+	return result.Error
+}
+
+func (ls *LocalStorage) CreateAPIClient(ctx context.Context, client *models.APIClient) (*models.APIClient, error) {
+	if err := ls.db.WithContext(ctx).Create(client).Error; err != nil {
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), err)
+	}
+	return client, nil
+}
+
+func (ls *LocalStorage) GetAPIClient(ctx context.Context, clientID string) (*models.APIClient, error) {
+	var client models.APIClient
+	if err := ls.db.WithContext(ctx).Where("client_id = ?", clientID).First(&client).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("%s", i18n.T("ErrorNotFound", nil))
+		}
+		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorRetrievalFailed", nil), err)
+	}
+	return &client, nil
+}
+
+func (ls *LocalStorage) RevokeAPIClient(ctx context.Context, clientID string) error {
+	result := ls.db.WithContext(ctx).Model(&models.APIClient{}).Where("client_id = ?", clientID).Update("is_active", false)
+	if result.Error != nil {
+		return fmt.Errorf("%s: %w", i18n.T("ErrorStorageFailed", nil), result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("%s", i18n.T("ErrorNotFound", nil))
+	}
+	return nil
+}
+
+func (ls *LocalStorage) HealthCheck(ctx context.Context) error {
+	var result int
+	return ls.db.WithContext(ctx).Raw("SELECT 1").Scan(&result).Error
+}
+
+func (ls *LocalStorage) GetStats(ctx context.Context) (*storage.StorageStats, error) {
+	stats := &storage.StorageStats{}
+
+	// Count secrets
+	ls.db.WithContext(ctx).Model(&models.SecretNode{}).Count(&stats.TotalSecrets)
+
+	// Count users
+	ls.db.WithContext(ctx).Model(&models.User{}).Count(&stats.TotalUsers)
+
+	// Count roles
+	ls.db.WithContext(ctx).Model(&models.Role{}).Count(&stats.TotalRoles)
+
+	// Count sessions
+	ls.db.WithContext(ctx).Model(&models.Session{}).Count(&stats.TotalSessions)
+
+	return stats, nil
+}

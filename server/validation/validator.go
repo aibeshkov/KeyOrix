@@ -24,8 +24,8 @@ func NewValidator() *Validator {
 
 // ValidationError represents validation errors
 type ValidationError struct {
-	Field   string `json:"field"`
-	Message string `json:"message"`
+	Field   string      `json:"field"`
+	Message string      `json:"message"`
 	Value   interface{} `json:"value,omitempty"`
 }
 
@@ -45,33 +45,33 @@ func (ve ValidationErrors) Error() string {
 // Validate validates a struct using reflection and validation tags
 func (v *Validator) Validate(s interface{}) error {
 	v.errors = make(map[string][]string)
-	
+
 	val := reflect.ValueOf(s)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
-	
+
 	if val.Kind() != reflect.Struct {
 		return fmt.Errorf("validation target must be a struct")
 	}
-	
+
 	typ := val.Type()
-	
+
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Field(i)
 		fieldType := typ.Field(i)
-		
+
 		// Skip unexported fields
 		if !field.CanInterface() {
 			continue
 		}
-		
+
 		// Get validation tag
 		tag := fieldType.Tag.Get("validate")
 		if tag == "" {
 			continue
 		}
-		
+
 		// Get JSON field name for error reporting
 		jsonTag := fieldType.Tag.Get("json")
 		fieldName := fieldType.Name
@@ -81,11 +81,11 @@ func (v *Validator) Validate(s interface{}) error {
 				fieldName = parts[0]
 			}
 		}
-		
+
 		// Validate field
 		v.validateField(fieldName, field, tag)
 	}
-	
+
 	if len(v.errors) > 0 {
 		var validationErrors []ValidationError
 		for field, messages := range v.errors {
@@ -98,25 +98,25 @@ func (v *Validator) Validate(s interface{}) error {
 		}
 		return ValidationErrors{Errors: validationErrors}
 	}
-	
+
 	return nil
 }
 
 // validateField validates a single field based on validation rules
 func (v *Validator) validateField(fieldName string, field reflect.Value, tag string) {
 	rules := strings.Split(tag, ",")
-	
+
 	for _, rule := range rules {
 		rule = strings.TrimSpace(rule)
 		if rule == "" {
 			continue
 		}
-		
+
 		// Handle optional fields
 		if rule == "omitempty" && v.isEmpty(field) {
 			return
 		}
-		
+
 		// Parse rule and parameters
 		parts := strings.Split(rule, "=")
 		ruleName := parts[0]
@@ -124,7 +124,7 @@ func (v *Validator) validateField(fieldName string, field reflect.Value, tag str
 		if len(parts) > 1 {
 			param = parts[1]
 		}
-		
+
 		// Apply validation rule
 		if err := v.applyRule(fieldName, field, ruleName, param); err != nil {
 			v.addError(fieldName, err.Error())
@@ -156,7 +156,7 @@ func (v *Validator) applyRule(fieldName string, field reflect.Value, ruleName, p
 	case "oneof":
 		return v.validateOneOf(field, param)
 	}
-	
+
 	return nil
 }
 
@@ -185,7 +185,7 @@ func (v *Validator) isEmpty(field reflect.Value) bool {
 func (v *Validator) validateMin(field reflect.Value, param string) error {
 	var min int
 	_, _ = fmt.Sscanf(param, "%d", &min)
-	
+
 	switch field.Kind() {
 	case reflect.String:
 		if len(field.String()) < min {
@@ -208,7 +208,7 @@ func (v *Validator) validateMin(field reflect.Value, param string) error {
 			return fmt.Errorf("must be at least %d", min)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -216,7 +216,7 @@ func (v *Validator) validateMin(field reflect.Value, param string) error {
 func (v *Validator) validateMax(field reflect.Value, param string) error {
 	var max int
 	_, _ = fmt.Sscanf(param, "%d", &max)
-	
+
 	switch field.Kind() {
 	case reflect.String:
 		if len(field.String()) > max {
@@ -239,7 +239,7 @@ func (v *Validator) validateMax(field reflect.Value, param string) error {
 			return fmt.Errorf("must be at most %d", max)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -248,17 +248,17 @@ func (v *Validator) validateEmail(field reflect.Value) error {
 	if field.Kind() != reflect.String {
 		return nil
 	}
-	
+
 	email := field.String()
 	if email == "" {
 		return nil
 	}
-	
+
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(email) {
 		return fmt.Errorf("%s: %s", i18n.T("ErrorValidation", nil), i18n.T("LabelEmail", nil))
 	}
-	
+
 	return nil
 }
 
@@ -267,17 +267,17 @@ func (v *Validator) validateURL(field reflect.Value) error {
 	if field.Kind() != reflect.String {
 		return nil
 	}
-	
+
 	url := field.String()
 	if url == "" {
 		return nil
 	}
-	
+
 	urlRegex := regexp.MustCompile(`^https?://[^\s/$.?#].[^\s]*$`)
 	if !urlRegex.MatchString(url) {
 		return fmt.Errorf("%s: must be a valid URL", i18n.T("ErrorValidation", nil))
 	}
-	
+
 	return nil
 }
 
@@ -286,17 +286,17 @@ func (v *Validator) validateAlpha(field reflect.Value) error {
 	if field.Kind() != reflect.String {
 		return nil
 	}
-	
+
 	str := field.String()
 	if str == "" {
 		return nil
 	}
-	
+
 	alphaRegex := regexp.MustCompile(`^[a-zA-Z]+$`)
 	if !alphaRegex.MatchString(str) {
 		return fmt.Errorf("%s: must contain only alphabetic characters", i18n.T("ErrorValidation", nil))
 	}
-	
+
 	return nil
 }
 
@@ -305,17 +305,17 @@ func (v *Validator) validateAlphaNum(field reflect.Value) error {
 	if field.Kind() != reflect.String {
 		return nil
 	}
-	
+
 	str := field.String()
 	if str == "" {
 		return nil
 	}
-	
+
 	alphaNumRegex := regexp.MustCompile(`^[a-zA-Z0-9]+$`)
 	if !alphaNumRegex.MatchString(str) {
 		return fmt.Errorf("%s: must contain only alphanumeric characters", i18n.T("ErrorValidation", nil))
 	}
-	
+
 	return nil
 }
 
@@ -324,17 +324,17 @@ func (v *Validator) validateNumeric(field reflect.Value) error {
 	if field.Kind() != reflect.String {
 		return nil
 	}
-	
+
 	str := field.String()
 	if str == "" {
 		return nil
 	}
-	
+
 	numericRegex := regexp.MustCompile(`^[0-9]+$`)
 	if !numericRegex.MatchString(str) {
 		return fmt.Errorf("%s: must contain only numeric characters", i18n.T("ErrorValidation", nil))
 	}
-	
+
 	return nil
 }
 
@@ -343,19 +343,19 @@ func (v *Validator) validateOneOf(field reflect.Value, param string) error {
 	if field.Kind() != reflect.String {
 		return nil
 	}
-	
+
 	value := field.String()
 	if value == "" {
 		return nil
 	}
-	
+
 	allowedValues := strings.Split(param, " ")
 	for _, allowed := range allowedValues {
 		if value == allowed {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("%s: must be one of: %s", i18n.T("ErrorValidation", nil), strings.Join(allowedValues, ", "))
 }
 

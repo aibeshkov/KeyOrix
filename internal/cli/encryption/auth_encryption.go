@@ -93,7 +93,7 @@ func runAuthEncryptionStatus(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("🔐 Authentication Encryption Status")
 	fmt.Println("=" + string(make([]rune, 35)))
-	
+
 	if status["enabled"].(bool) {
 		fmt.Println("✅ Status: ENABLED")
 	} else {
@@ -135,7 +135,7 @@ func runEnableAuthEncryption(cmd *cobra.Command, args []string) error {
 	}
 
 	authEnc := encryption.NewAuthEncryption(&cfg.Storage.Encryption, ".", db)
-	
+
 	// Check if already enabled
 	status := authEnc.GetAuthEncryptionStatus()
 	if status["enabled"].(bool) && status["initialized"].(bool) && !force {
@@ -370,8 +370,8 @@ func migrateAPIClients(db *gorm.DB, authEnc *encryption.AuthEncryption, dryRun b
 		}
 
 		updates := map[string]interface{}{
-			"encrypted_client_secret":  encryptedSecret,
-			"client_secret_metadata":   metadata,
+			"encrypted_client_secret": encryptedSecret,
+			"client_secret_metadata":  metadata,
 		}
 
 		if err := db.Model(&client).Updates(updates).Error; err != nil {
@@ -401,8 +401,8 @@ func migrateSessions(db *gorm.DB, authEnc *encryption.AuthEncryption, dryRun boo
 		}
 
 		updates := map[string]interface{}{
-			"encrypted_session_token":  encryptedToken,
-			"session_token_metadata":   metadata,
+			"encrypted_session_token": encryptedToken,
+			"session_token_metadata":  metadata,
 		}
 
 		if err := db.Model(&session).Updates(updates).Error; err != nil {
@@ -432,8 +432,8 @@ func migrateAPITokens(db *gorm.DB, authEnc *encryption.AuthEncryption, dryRun bo
 		}
 
 		updates := map[string]interface{}{
-			"encrypted_token":  encryptedToken,
-			"token_metadata":   metadata,
+			"encrypted_token": encryptedToken,
+			"token_metadata":  metadata,
 		}
 
 		if err := db.Model(&token).Updates(updates).Error; err != nil {
@@ -463,8 +463,8 @@ func migratePasswordResetTokens(db *gorm.DB, authEnc *encryption.AuthEncryption,
 		}
 
 		updates := map[string]interface{}{
-			"encrypted_token":  encryptedToken,
-			"token_metadata":   metadata,
+			"encrypted_token": encryptedToken,
+			"token_metadata":  metadata,
 		}
 
 		if err := db.Model(&reset).Updates(updates).Error; err != nil {

@@ -13,7 +13,7 @@ var FixFilePermCmd = &cobra.Command{
 	Use:   "fixfileperm",
 	Short: "Fix file permissions on critical files (config, KEK, DEK)",
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg, err := config.Load("config.yaml")
+		cfg, err := config.Load("secretly.yaml")
 		if err != nil {
 			log.Fatalf("Failed to load config: %v", err)
 		}
@@ -21,7 +21,7 @@ var FixFilePermCmd = &cobra.Command{
 		files := []securefiles.FilePermSpec{
 			{Path: cfg.Storage.Encryption.KEKPath, Mode: 0600},
 			{Path: cfg.Storage.Encryption.DEKPath, Mode: 0600},
-			{Path: "config.yaml", Mode: 0600},
+			{Path: "secretly.yaml", Mode: 0600},
 		}
 
 		// fix permissions: autofix = true

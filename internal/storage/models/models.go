@@ -78,6 +78,8 @@ type SecretNode struct {
 	Metadata      datatypes.JSON
 	Status        string `gorm:"default:'active'"`
 	CreatedBy     string
+	OwnerID       uint   `gorm:"index"`
+	IsShared      bool   `gorm:"default:false"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
@@ -113,23 +115,23 @@ type SecretMetadataHistory struct {
 }
 
 type Session struct {
-	ID                     uint `gorm:"primaryKey"`
-	UserID                 uint
-	SessionToken           string `gorm:"unique"` // Deprecated: use EncryptedSessionToken
-	EncryptedSessionToken  []byte
-	SessionTokenMetadata   datatypes.JSON
-	CreatedAt              time.Time
-	ExpiresAt              *time.Time
+	ID                    uint `gorm:"primaryKey"`
+	UserID                uint
+	SessionToken          string `gorm:"unique"` // Deprecated: use EncryptedSessionToken
+	EncryptedSessionToken []byte
+	SessionTokenMetadata  datatypes.JSON
+	CreatedAt             time.Time
+	ExpiresAt             *time.Time
 }
 
 type PasswordReset struct {
-	ID                   uint `gorm:"primaryKey"`
-	UserID               uint
-	Token                string `gorm:"unique"` // Deprecated: use EncryptedToken
-	EncryptedToken       []byte
-	TokenMetadata        datatypes.JSON
-	ExpiresAt            *time.Time
-	CreatedAt            time.Time
+	ID             uint `gorm:"primaryKey"`
+	UserID         uint
+	Token          string `gorm:"unique"` // Deprecated: use EncryptedToken
+	EncryptedToken []byte
+	TokenMetadata  datatypes.JSON
+	ExpiresAt      *time.Time
+	CreatedAt      time.Time
 }
 
 type Tag struct {
@@ -175,29 +177,29 @@ type SystemMetadata struct {
 }
 
 type APIClient struct {
-	ID                     uint `gorm:"primaryKey"`
-	Name                   string
-	Description            string
-	ClientID               string `gorm:"unique"`
-	ClientSecret           string // Deprecated: use EncryptedClientSecret
-	EncryptedClientSecret  []byte
-	ClientSecretMetadata   datatypes.JSON
-	Scopes                 string
-	IsActive               bool
-	CreatedAt              time.Time
+	ID                    uint `gorm:"primaryKey"`
+	Name                  string
+	Description           string
+	ClientID              string `gorm:"unique"`
+	ClientSecret          string // Deprecated: use EncryptedClientSecret
+	EncryptedClientSecret []byte
+	ClientSecretMetadata  datatypes.JSON
+	Scopes                string
+	IsActive              bool
+	CreatedAt             time.Time
 }
 
 type APIToken struct {
-	ID            uint `gorm:"primaryKey"`
-	ClientID      uint
-	UserID        *uint
-	Token         string `gorm:"unique"` // Deprecated: use EncryptedToken
+	ID             uint `gorm:"primaryKey"`
+	ClientID       uint
+	UserID         *uint
+	Token          string `gorm:"unique"` // Deprecated: use EncryptedToken
 	EncryptedToken []byte
-	TokenMetadata datatypes.JSON
-	Scope         string
-	Revoked       bool
-	ExpiresAt     *time.Time
-	CreatedAt     time.Time
+	TokenMetadata  datatypes.JSON
+	Scope          string
+	Revoked        bool
+	ExpiresAt      *time.Time
+	CreatedAt      time.Time
 }
 
 type RateLimit struct {
@@ -219,6 +221,18 @@ type APICallLog struct {
 	IPAddress  string
 	UserAgent  string
 	CreatedAt  time.Time
+}
+
+type ShareRecord struct {
+	ID          uint      `gorm:"primaryKey"`
+	SecretID    uint      `gorm:"index"`
+	OwnerID     uint      `gorm:"index"`
+	RecipientID uint      `gorm:"index"`
+	IsGroup     bool      `gorm:"default:false"`
+	Permission  string    `gorm:"default:read"` // "read" or "write"
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time `gorm:"index"`
 }
 
 type GRPCService struct {

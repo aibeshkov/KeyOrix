@@ -22,13 +22,13 @@ var grpcMetrics = &Metrics{}
 func MetricsInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		start := time.Now()
-		
+
 		// Increment total requests
 		atomic.AddInt64(&grpcMetrics.TotalRequests, 1)
 
 		// Call the handler
 		resp, err := handler(ctx, req)
-		
+
 		// Record duration
 		duration := time.Since(start)
 		atomic.AddInt64(&grpcMetrics.TotalDuration, duration.Nanoseconds())

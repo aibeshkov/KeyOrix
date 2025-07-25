@@ -10,34 +10,34 @@ import (
 
 // AuditLog represents an audit log entry
 type AuditLog struct {
-	ID          uint      `json:"id"`
-	UserID      uint      `json:"user_id"`
-	Username    string    `json:"username"`
-	Action      string    `json:"action"`
-	Resource    string    `json:"resource"`
-	ResourceID  *uint     `json:"resource_id,omitempty"`
-	Details     string    `json:"details"`
-	IPAddress   string    `json:"ip_address"`
-	UserAgent   string    `json:"user_agent"`
-	Success     bool      `json:"success"`
-	ErrorMsg    *string   `json:"error_message,omitempty"`
-	Timestamp   time.Time `json:"timestamp"`
+	ID         uint      `json:"id"`
+	UserID     uint      `json:"user_id"`
+	Username   string    `json:"username"`
+	Action     string    `json:"action"`
+	Resource   string    `json:"resource"`
+	ResourceID *uint     `json:"resource_id,omitempty"`
+	Details    string    `json:"details"`
+	IPAddress  string    `json:"ip_address"`
+	UserAgent  string    `json:"user_agent"`
+	Success    bool      `json:"success"`
+	ErrorMsg   *string   `json:"error_message,omitempty"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 // RBACAuditLog represents an RBAC-specific audit log entry
 type RBACAuditLog struct {
-	ID          uint      `json:"id"`
-	UserID      uint      `json:"user_id"`
-	Username    string    `json:"username"`
-	Action      string    `json:"action"`
-	TargetType  string    `json:"target_type"`
-	TargetID    uint      `json:"target_id"`
-	TargetName  string    `json:"target_name"`
-	Details     string    `json:"details"`
-	IPAddress   string    `json:"ip_address"`
-	Success     bool      `json:"success"`
-	ErrorMsg    *string   `json:"error_message,omitempty"`
-	Timestamp   time.Time `json:"timestamp"`
+	ID         uint      `json:"id"`
+	UserID     uint      `json:"user_id"`
+	Username   string    `json:"username"`
+	Action     string    `json:"action"`
+	TargetType string    `json:"target_type"`
+	TargetID   uint      `json:"target_id"`
+	TargetName string    `json:"target_name"`
+	Details    string    `json:"details"`
+	IPAddress  string    `json:"ip_address"`
+	Success    bool      `json:"success"`
+	ErrorMsg   *string   `json:"error_message,omitempty"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 // GetAuditLogs handles GET /api/v1/audit/logs

@@ -15,33 +15,33 @@ func Recovery() func(next http.Handler) http.Handler {
 				if err := recover(); err != nil {
 					// Log the panic with stack trace
 					log.Printf("PANIC: %v\n%s", err, debug.Stack())
-					
+
 					// Get request context for logging
 					requestID := r.Header.Get("X-Request-ID")
 					if requestID == "" {
 						requestID = "unknown"
 					}
-					
+
 					var userInfo string
 					if userCtx := GetUserFromContext(r.Context()); userCtx != nil {
 						userInfo = userCtx.Username
 					} else {
 						userInfo = "anonymous"
 					}
-					
+
 					log.Printf("PANIC CONTEXT: RequestID=%s, User=%s, Method=%s, Path=%s, RemoteAddr=%s",
 						requestID, userInfo, r.Method, r.URL.Path, r.RemoteAddr)
-					
+
 					// Send error response
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusInternalServerError)
-					
+
 					response := map[string]interface{}{
 						"error":   "InternalServerError",
 						"message": "An internal server error occurred",
 						"code":    http.StatusInternalServerError,
 					}
-					
+
 					// In development mode, include more details
 					// TODO: Check if in development mode from config
 					if isDevelopmentMode() {
@@ -51,14 +51,14 @@ func Recovery() func(next http.Handler) http.Handler {
 							"request_id": requestID,
 						}
 					}
-					
+
 					if encodeErr := json.NewEncoder(w).Encode(response); encodeErr != nil {
 						log.Printf("Failed to encode panic response: %v", encodeErr)
 						http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 					}
 				}
 			}()
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}

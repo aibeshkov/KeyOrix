@@ -14,10 +14,15 @@ import (
 	"time"
 
 	"github.com/secretlyhq/secretly/internal/config"
+	"github.com/secretlyhq/secretly/internal/core"
 	"github.com/secretlyhq/secretly/internal/i18n"
+	"github.com/secretlyhq/secretly/internal/storage/local"
+	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/secretlyhq/secretly/server/grpc"
 	httpServer "github.com/secretlyhq/secretly/server/http"
 	"golang.org/x/crypto/acme/autocert"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -88,9 +93,34 @@ func main() {
 	}
 }
 
+func initializeCoreService(cfg *config.Config) (*core.SecretlyCore, error) {
+	// Connect to database
+	db, err := gorm.Open(sqlite.Open(cfg.Storage.Database.Path), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// Auto-migrate models
+	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}, &models.User{}, &models.Role{}); err != nil {
+		return nil, fmt.Errorf("failed to migrate database: %w", err)
+	}
+
+	// Initialize storage and core service
+	storage := local.NewLocalStorage(db)
+	coreService := core.NewSecretlyCore(storage)
+
+	return coreService, nil
+}
+
 func startHTTPServer(ctx context.Context, cfg *config.Config) error {
+	// Initialize core service
+	coreService, err := initializeCoreService(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to initialize core service: %w", err)
+	}
+
 	// Create HTTP router
-	router, err := httpServer.NewRouter(cfg)
+	router, err := httpServer.NewRouter(cfg, coreService)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP router: %w", err)
 	}

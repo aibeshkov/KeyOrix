@@ -100,13 +100,13 @@ func (tr *TestRunner) runTestSuite(path, name string) error {
 
 	// Build the go test command
 	args := []string{"test"}
-	
+
 	if tr.verbose {
 		args = append(args, "-v")
 	}
-	
+
 	args = append(args, "-timeout", tr.timeout.String())
-	args = append(args, "-race") // Enable race detection
+	args = append(args, "-race")  // Enable race detection
 	args = append(args, "-cover") // Enable coverage
 	args = append(args, path)
 
@@ -136,17 +136,17 @@ func (tr *TestRunner) runTestSuite(path, name string) error {
 func validateTestPath(path string) error {
 	// Clean the path to prevent directory traversal
 	cleanPath := filepath.Clean(path)
-	
+
 	// Ensure the path starts with "./" (relative path within current directory)
 	if !strings.HasPrefix(cleanPath, "./") {
 		return fmt.Errorf("path must be relative and start with './'")
 	}
-	
+
 	// Prevent directory traversal attacks
 	if strings.Contains(cleanPath, "..") {
 		return fmt.Errorf("path cannot contain '..' (directory traversal)")
 	}
-	
+
 	// Only allow specific safe directories
 	allowedPrefixes := []string{
 		"./http/",
@@ -155,7 +155,7 @@ func validateTestPath(path string) error {
 		"./validation/",
 		"./services/",
 	}
-	
+
 	allowed := false
 	for _, prefix := range allowedPrefixes {
 		if strings.HasPrefix(cleanPath, prefix) {
@@ -163,11 +163,11 @@ func validateTestPath(path string) error {
 			break
 		}
 	}
-	
+
 	if !allowed {
 		return fmt.Errorf("path not in allowed directories")
 	}
-	
+
 	return nil
 }
 

@@ -2,35 +2,30 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/secretlyhq/secretly/internal/core"
 	"github.com/secretlyhq/secretly/internal/i18n"
+	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/secretlyhq/secretly/server/middleware"
-	"github.com/secretlyhq/secretly/server/services"
 	"github.com/secretlyhq/secretly/server/validation"
 )
 
 // SecretHandler handles secret-related HTTP requests
 type SecretHandler struct {
-	secretService *services.SecretServiceWrapper
-	validator     *validation.Validator
+	coreService *core.SecretlyCore
+	validator   *validation.Validator
 }
 
 // NewSecretHandler creates a new secret handler
-func NewSecretHandler() (*SecretHandler, error) {
-	secretService, err := services.NewSecretServiceWrapper()
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", i18n.T("ErrorInitializationFailed", nil), err)
-	}
-
+func NewSecretHandler(coreService *core.SecretlyCore) (*SecretHandler, error) {
 	return &SecretHandler{
-		secretService: secretService,
-		validator:     validation.NewValidator(),
+		coreService: coreService,
+		validator:   validation.NewValidator(),
 	}, nil
 }
 
@@ -57,45 +52,72 @@ func (h *SecretHandler) ListSecrets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse and validate query parameters
-	req := &services.ListSecretsRequest{
-		Namespace:   strings.TrimSpace(r.URL.Query().Get("namespace")),
-		Zone:        strings.TrimSpace(r.URL.Query().Get("zone")),
-		Environment: strings.TrimSpace(r.URL.Query().Get("environment")),
-		Type:        strings.TrimSpace(r.URL.Query().Get("type")),
-		Page:        1,
-		PageSize:    20,
-	}
-
-	// Parse tags
-	if tagsParam := r.URL.Query().Get("tags"); tagsParam != "" {
-		req.Tags = strings.Split(tagsParam, ",")
-		for i, tag := range req.Tags {
-			req.Tags[i] = strings.TrimSpace(tag)
-		}
-	}
-
-	// Parse pagination
+	// Parse query parameters
+	page := 1
+	pageSize := 20
+	
 	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
-		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
-			req.Page = page
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
 		}
 	}
 
 	if pageSizeStr := r.URL.Query().Get("page_size"); pageSizeStr != "" {
-		if pageSize, err := strconv.Atoi(pageSizeStr); err == nil && pageSize > 0 && pageSize <= 100 {
-			req.PageSize = pageSize
+		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 && ps <= 100 {
+			pageSize = ps
 		}
 	}
 
-	// Validate request
-	if err := h.validator.Validate(req); err != nil {
-		h.sendError(w, "ValidationError", "Invalid request parameters", http.StatusBadRequest, err)
-		return
+	// Build filter with sharing options
+	filter := &models.SecretListFilter{
+		Page:     page,
+		PageSize: pageSize,
+		SortBy:   r.URL.Query().Get("sort_by"),
+		SortOrder: r.URL.Query().Get("sort_order"),
 	}
 
-	// Call service
-	response, err := h.secretService.ListSecrets(r.Context(), req, userCtx.UserID)
+	// Parse sharing filters
+	if r.URL.Query().Get("show_owned_only") == "true" {
+		filter.ShowOwnedOnly = true
+	}
+	if r.URL.Query().Get("show_shared_only") == "true" {
+		filter.ShowSharedOnly = true
+	}
+
+	// Parse permission filter
+	if permission := r.URL.Query().Get("permission"); permission != "" {
+		filter.Permission = permission
+	}
+
+	// Parse other filters
+	if typeParam := strings.TrimSpace(r.URL.Query().Get("type")); typeParam != "" {
+		filter.Type = &typeParam
+	}
+
+	// Parse namespace, zone, environment filters
+	if namespaceStr := r.URL.Query().Get("namespace_id"); namespaceStr != "" {
+		if nsID, err := strconv.ParseUint(namespaceStr, 10, 32); err == nil {
+			nsIDUint := uint(nsID)
+			filter.NamespaceID = &nsIDUint
+		}
+	}
+
+	if zoneStr := r.URL.Query().Get("zone_id"); zoneStr != "" {
+		if zID, err := strconv.ParseUint(zoneStr, 10, 32); err == nil {
+			zIDUint := uint(zID)
+			filter.ZoneID = &zIDUint
+		}
+	}
+
+	if envStr := r.URL.Query().Get("environment_id"); envStr != "" {
+		if eID, err := strconv.ParseUint(envStr, 10, 32); err == nil {
+			eIDUint := uint(eID)
+			filter.EnvironmentID = &eIDUint
+		}
+	}
+
+	// Call service with sharing information
+	response, err := h.coreService.ListSecretsWithSharingInfo(r.Context(), userCtx.UserID, filter)
 	if err != nil {
 		log.Printf("Error listing secrets: %v", err)
 		h.sendError(w, "InternalError", "Failed to list secrets", http.StatusInternalServerError, nil)
@@ -116,23 +138,45 @@ func (h *SecretHandler) CreateSecret(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse request body
-	var req services.SecretCreateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var reqBody struct {
+		Name          string            `json:"name" validate:"required,min=1,max=255"`
+		Value         string            `json:"value" validate:"required"`
+		NamespaceID   uint              `json:"namespace_id" validate:"required"`
+		ZoneID        uint              `json:"zone_id" validate:"required"`
+		EnvironmentID uint              `json:"environment_id" validate:"required"`
+		Type          string            `json:"type" validate:"required"`
+		MaxReads      *int              `json:"max_reads,omitempty" validate:"omitempty,min=1"`
+		Metadata      map[string]string `json:"metadata,omitempty"`
+		Tags          []string          `json:"tags,omitempty"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		h.sendError(w, "InvalidJSON", "Invalid JSON in request body", http.StatusBadRequest, nil)
 		return
 	}
 
 	// Validate request
-	if err := h.validator.Validate(&req); err != nil {
+	if err := h.validator.Validate(&reqBody); err != nil {
 		h.sendError(w, "ValidationError", "Invalid request data", http.StatusBadRequest, err)
 		return
 	}
 
-	// Parse expiration if provided
-	// Note: req.Expiration is already a *time.Time, no parsing needed
+	// Build core request
+	req := &core.CreateSecretRequest{
+		Name:          reqBody.Name,
+		Value:         []byte(reqBody.Value),
+		NamespaceID:   reqBody.NamespaceID,
+		ZoneID:        reqBody.ZoneID,
+		EnvironmentID: reqBody.EnvironmentID,
+		Type:          reqBody.Type,
+		MaxReads:      reqBody.MaxReads,
+		Metadata:      reqBody.Metadata,
+		Tags:          reqBody.Tags,
+		CreatedBy:     userCtx.Username,
+	}
 
 	// Call service
-	response, err := h.secretService.CreateSecret(r.Context(), &req, userCtx.UserID)
+	response, err := h.coreService.CreateSecret(r.Context(), req)
 	if err != nil {
 		log.Printf("Error creating secret: %v", err)
 		if strings.Contains(err.Error(), "already exists") {
@@ -165,11 +209,8 @@ func (h *SecretHandler) GetSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if requesting decrypted value
-	includeValue := r.URL.Query().Get("include_value") == "true"
-
-	// Call service
-	response, err := h.secretService.GetSecret(r.Context(), uint(id), includeValue, userCtx.UserID)
+	// Call service with permission check
+	secret, err := h.coreService.GetSecretWithPermissionCheck(r.Context(), uint(id), userCtx.UserID)
 	if err != nil {
 		log.Printf("Error getting secret: %v", err)
 		if strings.Contains(err.Error(), "not found") {
@@ -180,6 +221,30 @@ func (h *SecretHandler) GetSecret(w http.ResponseWriter, r *http.Request) {
 			h.sendError(w, "InternalError", "Failed to get secret", http.StatusInternalServerError, nil)
 		}
 		return
+	}
+
+	// Check if requesting decrypted value
+	includeValue := r.URL.Query().Get("include_value") == "true"
+	var response interface{} = secret
+	
+	if includeValue {
+		// Get the secret value with permission check
+		value, err := h.coreService.GetSecretValueWithPermissionCheck(r.Context(), uint(id), userCtx.UserID)
+		if err != nil {
+			log.Printf("Error getting secret value: %v", err)
+			if strings.Contains(err.Error(), "permission denied") {
+				h.sendError(w, "Forbidden", "Access denied", http.StatusForbidden, nil)
+			} else {
+				h.sendError(w, "InternalError", "Failed to get secret value", http.StatusInternalServerError, nil)
+			}
+			return
+		}
+		
+		// Create response with value
+		response = map[string]interface{}{
+			"secret": secret,
+			"value":  string(value),
+		}
 	}
 
 	// Send response
@@ -204,20 +269,36 @@ func (h *SecretHandler) UpdateSecret(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse request body
-	var req services.SecretUpdateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var reqBody struct {
+		Value    string `json:"value,omitempty"`
+		MaxReads *int   `json:"max_reads,omitempty" validate:"omitempty,min=1"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		h.sendError(w, "InvalidJSON", "Invalid JSON in request body", http.StatusBadRequest, nil)
 		return
 	}
 
 	// Validate request
-	if err := h.validator.Validate(&req); err != nil {
+	if err := h.validator.Validate(&reqBody); err != nil {
 		h.sendError(w, "ValidationError", "Invalid request data", http.StatusBadRequest, err)
 		return
 	}
 
-	// Call service
-	response, err := h.secretService.UpdateSecret(r.Context(), uint(id), &req, userCtx.UserID)
+	// Build core request
+	req := &core.UpdateSecretRequest{
+		ID:        uint(id),
+		MaxReads:  reqBody.MaxReads,
+		UpdatedBy: userCtx.Username,
+		UserID:    userCtx.UserID, // Add user ID for permission checking
+	}
+
+	if reqBody.Value != "" {
+		req.Value = []byte(reqBody.Value)
+	}
+
+	// Call service with permission check
+	response, err := h.coreService.UpdateSecretWithPermissionCheck(r.Context(), req)
 	if err != nil {
 		log.Printf("Error updating secret: %v", err)
 		if strings.Contains(err.Error(), "not found") {
@@ -251,8 +332,8 @@ func (h *SecretHandler) DeleteSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Call service
-	err = h.secretService.DeleteSecret(r.Context(), uint(id), userCtx.UserID)
+	// Call service with permission check
+	err = h.coreService.DeleteSecretWithPermissionCheck(r.Context(), uint(id), userCtx.UserID)
 	if err != nil {
 		log.Printf("Error deleting secret: %v", err)
 		if strings.Contains(err.Error(), "not found") {
@@ -286,8 +367,8 @@ func (h *SecretHandler) GetSecretVersions(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Call service
-	versions, err := h.secretService.GetSecretVersions(r.Context(), uint(id), userCtx.UserID)
+	// Call service with permission check
+	versions, err := h.coreService.GetSecretVersionsWithPermissionCheck(r.Context(), uint(id), userCtx.UserID)
 	if err != nil {
 		log.Printf("Error getting secret versions: %v", err)
 		if strings.Contains(err.Error(), "not found") {
@@ -313,12 +394,12 @@ func (h *SecretHandler) GetSecretVersions(w http.ResponseWriter, r *http.Request
 func (h *SecretHandler) sendSuccess(w http.ResponseWriter, data interface{}, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	
+
 	response := SuccessResponse{
 		Data:    data,
 		Message: message,
 	}
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Error encoding JSON response: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -330,16 +411,15 @@ func (h *SecretHandler) sendError(w http.ResponseWriter, errorType, message stri
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(statusCode)
-	
+
 	response := ErrorResponse{
 		Error:   errorType,
 		Message: message,
 		Code:    statusCode,
 		Details: details,
 	}
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Error encoding JSON error response: %v", err)
 	}
 }
-

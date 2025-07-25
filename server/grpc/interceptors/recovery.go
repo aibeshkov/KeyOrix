@@ -17,7 +17,7 @@ func RecoveryInterceptor() grpc.UnaryServerInterceptor {
 			if r := recover(); r != nil {
 				// Log the panic with stack trace
 				log.Printf("gRPC PANIC in %s: %v\n%s", info.FullMethod, r, debug.Stack())
-				
+
 				// Return internal server error
 				err = status.Errorf(codes.Internal, "Internal server error")
 			}
@@ -34,7 +34,7 @@ func StreamRecoveryInterceptor() grpc.StreamServerInterceptor {
 			if r := recover(); r != nil {
 				// Log the panic with stack trace
 				log.Printf("gRPC STREAM PANIC in %s: %v\n%s", info.FullMethod, r, debug.Stack())
-				
+
 				// Return internal server error
 				err = status.Errorf(codes.Internal, "Internal server error")
 			}

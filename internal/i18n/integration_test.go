@@ -70,12 +70,12 @@ func TestAllSupportedLanguages(t *testing.T) {
 
 	// Test all supported languages
 	languages := []struct {
-		code     string
-		welcome  string
-		error    string
-		success  string
-		label    string
-		button   string
+		code    string
+		welcome string
+		error   string
+		success string
+		label   string
+		button  string
 	}{
 		{
 			code:    "en",
@@ -138,7 +138,7 @@ func TestAllSupportedLanguages(t *testing.T) {
 			for _, tc := range testCases {
 				result := localizer.Localize(tc.messageID, nil)
 				if result != tc.expected {
-					t.Errorf("Language %s: Localize(%s) = %v, expected %v", 
+					t.Errorf("Language %s: Localize(%s) = %v, expected %v",
 						lang.code, tc.messageID, result, tc.expected)
 				}
 			}
@@ -276,7 +276,7 @@ func TestLanguageSwitching(t *testing.T) {
 			localizer.SetLanguage(lang.code)
 			result := localizer.Localize("Welcome", nil)
 			if result != lang.expected {
-				t.Errorf("After SetLanguage(%s): Localize() = %v, expected %v", 
+				t.Errorf("After SetLanguage(%s): Localize() = %v, expected %v",
 					lang.code, result, lang.expected)
 			}
 		})
@@ -325,7 +325,7 @@ func TestMessageCompleteness(t *testing.T) {
 	for _, lang := range languages {
 		t.Run("completeness_"+lang, func(t *testing.T) {
 			localizer.SetLanguage(lang)
-			
+
 			for _, messageID := range keyMessages {
 				result := localizer.Localize(messageID, nil)
 				// If translation is missing, it returns the messageID
@@ -420,7 +420,7 @@ func TestErrorMessageTranslations(t *testing.T) {
 			localizer.SetLanguage(test.lang)
 			result := localizer.Localize(test.messageID, nil)
 			if result != test.expected {
-				t.Errorf("Language %s: Localize(%s) = %v, expected %v", 
+				t.Errorf("Language %s: Localize(%s) = %v, expected %v",
 					test.lang, test.messageID, result, test.expected)
 			}
 		})
@@ -464,7 +464,7 @@ func TestSuccessMessageTranslations(t *testing.T) {
 			localizer.SetLanguage(test.lang)
 			result := localizer.Localize(test.messageID, nil)
 			if result != test.expected {
-				t.Errorf("Language %s: Localize(%s) = %v, expected %v", 
+				t.Errorf("Language %s: Localize(%s) = %v, expected %v",
 					test.lang, test.messageID, result, test.expected)
 			}
 		})

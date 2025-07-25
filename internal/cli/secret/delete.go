@@ -2,13 +2,15 @@ package secret
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/secretlyhq/secretly/internal/config"
-	"github.com/secretlyhq/secretly/internal/services"
-	"github.com/secretlyhq/secretly/internal/storage/repository"
+	"github.com/secretlyhq/secretly/internal/core"
+	"github.com/secretlyhq/secretly/internal/storage/local"
+	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -50,7 +52,7 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load configuration
-	cfg, err := config.Load("secretly.yaml")
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -61,27 +63,36 @@ func runDelete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	// Initialize service
-	repo := repository.NewSecretRepository(db)
-	service := services.NewSecretService(repo, &cfg.Storage.Encryption, ".", db, cfg)
+	// Auto-migrate models (ensure tables exist)
+	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
+
+	// Initialize storage and core service
+	storageImpl := local.NewLocalStorage(db)
+	service := core.NewSecretlyCore(storageImpl)
+
+	// Create context
+	ctx := context.Background()
 
 	var secretID uint
 	var secretName string
 
 	// Get secret information
 	if deleteID != 0 {
-		secret, err := service.GetSecret(deleteID)
+		secret, err := service.GetSecret(ctx, deleteID)
 		if err != nil {
 			return fmt.Errorf("secret not found: %w", err)
 		}
 		secretID = secret.ID
 		secretName = secret.Name
 	} else {
-		// Find by name
-		secret, err := repo.GetByName(deleteName, deleteNS, deleteZone, deleteEnv)
+		// Find by name using storage method
+		secret, err := storageImpl.GetSecretByName(ctx, deleteName, deleteNS, deleteZone, deleteEnv)
 		if err != nil {
 			return fmt.Errorf("secret not found: %w", err)
 		}
+		
 		secretID = secret.ID
 		secretName = secret.Name
 	}
@@ -91,8 +102,8 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	fmt.Printf("ID: %d\n", secretID)
 	fmt.Printf("Name: %s\n", secretName)
 
-	// Get versions count
-	versions, err := service.GetSecretVersions(secretID)
+	// Get versions count by listing versions
+	versions, err := storageImpl.GetSecretVersions(ctx, secretID)
 	if err != nil {
 		return fmt.Errorf("failed to get versions: %w", err)
 	}
@@ -110,7 +121,7 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	// Delete the secret
-	if err := service.DeleteSecret(secretID); err != nil {
+	if err := service.DeleteSecret(ctx, secretID); err != nil {
 		return fmt.Errorf("failed to delete secret: %w", err)
 	}
 

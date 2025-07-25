@@ -99,6 +99,36 @@
         "one": "Storage operation failed",
         "other": "Storage operation failed"
     },
+    "ErrorVersionNotFound": {
+        "description": "Error message when secret version is not found",
+        "one": "Secret version not found",
+        "other": "Secret version not found"
+    },
+    "ErrorNoVersionsFound": {
+        "description": "Error message when no versions are found for a secret",
+        "one": "No versions found for secret",
+        "other": "No versions found for secret"
+    },
+    "ErrorMaxReadsExceeded": {
+        "description": "Error message when maximum reads exceeded",
+        "one": "Maximum read count exceeded",
+        "other": "Maximum read count exceeded"
+    },
+    "ErrorRetrievalFailed": {
+        "description": "Error message when data retrieval fails",
+        "one": "Data retrieval failed",
+        "other": "Data retrieval failed"
+    },
+    "ErrorSecretAlreadyExists": {
+        "description": "Error message when secret already exists",
+        "one": "Secret already exists",
+        "other": "Secret already exists"
+    },
+    "ErrorInvalidMetadata": {
+        "description": "Error message for invalid metadata",
+        "one": "Invalid metadata format",
+        "other": "Invalid metadata format"
+    },
     "ErrorRetrievalFailed": {
         "description": "Error message when retrieval operation fails",
         "one": "Retrieval operation failed",
@@ -433,5 +463,40 @@
         "description": "Button text for status action",
         "one": "Status",
         "other": "Status"
+    },
+    "CLISelfRemoveShort": {
+        "description": "Short description for self-remove CLI command",
+        "one": "Remove yourself from a shared secret",
+        "other": "Remove yourself from a shared secret"
+    },
+    "CLISelfRemoveLong": {
+        "description": "Long description for self-remove CLI command",
+        "one": "Remove yourself from a shared secret. This will revoke your access to the secret and you will no longer be able to view or modify it.",
+        "other": "Remove yourself from a shared secret. This will revoke your access to the secret and you will no longer be able to view or modify it."
+    },
+    "ErrorInvalidSecretID": {
+        "description": "Error message for invalid secret ID",
+        "one": "Invalid secret ID",
+        "other": "Invalid secret ID"
+    },
+    "ErrorUserNotAuthenticated": {
+        "description": "Error message when user is not authenticated",
+        "one": "User not authenticated",
+        "other": "User not authenticated"
+    },
+    "ErrorSelfRemovalFailed": {
+        "description": "Error message when self-removal fails",
+        "one": "Failed to remove yourself from the shared secret",
+        "other": "Failed to remove yourself from the shared secret"
+    },
+    "SuccessSelfRemoved": {
+        "description": "Success message when user removes themselves from a share",
+        "one": "Successfully removed yourself from secret {{.SecretID}}",
+        "other": "Successfully removed yourself from secret {{.SecretID}}"
+    },
+    "ErrorShareNotFound": {
+        "description": "Error message when share is not found",
+        "one": "Share not found",
+        "other": "Share not found"
     }
 }
