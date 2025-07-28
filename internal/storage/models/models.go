@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type Namespace struct {
@@ -232,7 +233,7 @@ type ShareRecord struct {
 	Permission  string    `gorm:"default:read"` // "read" or "write"
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	DeletedAt   *time.Time `gorm:"index"`
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
 type GRPCService struct {

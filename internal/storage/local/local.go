@@ -491,6 +491,13 @@ func (ls *LocalStorage) HealthCheck(ctx context.Context) error {
 	return ls.db.WithContext(ctx).Raw("SELECT 1").Scan(&result).Error
 }
 
+// GetUserGroups retrieves all groups a user is a member of
+func (ls *LocalStorage) GetUserGroups(ctx context.Context, userID uint) ([]*models.Group, error) {
+	// For now, return empty groups since group functionality is not fully implemented
+	// This is a placeholder implementation to satisfy the interface
+	return []*models.Group{}, nil
+}
+
 func (ls *LocalStorage) GetStats(ctx context.Context) (*storage.StorageStats, error) {
 	stats := &storage.StorageStats{}
 

@@ -5,12 +5,54 @@ import (
 	"testing"
 	"time"
 
+	"github.com/secretlyhq/secretly/internal/config"
+	"github.com/secretlyhq/secretly/internal/i18n"
 	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCheckSecretPermission(t *testing.T) {
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
+	// Helper function to create test secret
+	createTestSecret := func(id, ownerID uint, name string) *models.SecretNode {
+		return &models.SecretNode{
+			ID:      id,
+			OwnerID: ownerID,
+			Name:    name,
+		}
+	}
+
+	// Helper function to create test share
+	createTestShare := func(id, secretID, recipientID uint, permission string, isGroup bool) *models.ShareRecord {
+		return &models.ShareRecord{
+			ID:          id,
+			SecretID:    secretID,
+			RecipientID: recipientID,
+			IsGroup:     isGroup,
+			Permission:  permission,
+			CreatedAt:   time.Now(),
+		}
+	}
+
+	// Helper function to create test group
+	createTestGroup := func(id uint, name string) *models.Group {
+		return &models.Group{
+			ID:   id,
+			Name: name,
+		}
+	}
+
 	tests := []struct {
 		name               string
 		secretID           uint
@@ -27,11 +69,8 @@ func TestCheckSecretPermission(t *testing.T) {
 			userID:             1,
 			requiredPermission: PermissionRead,
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 1,
-					Name:    "test-secret",
-				}, nil)
+				secret := createTestSecret(1, 1, "test-secret")
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
 			},
 			expectedPermission: PermissionOwner,
 			expectedSource:     "owner",
@@ -43,21 +82,11 @@ func TestCheckSecretPermission(t *testing.T) {
 			userID:             2,
 			requiredPermission: PermissionRead,
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 1,
-					Name:    "test-secret",
-				}, nil)
-				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{
-					{
-						ID:          1,
-						SecretID:    1,
-						RecipientID: 2,
-						IsGroup:     false,
-						Permission:  "read",
-						CreatedAt:   time.Now(),
-					},
-				}, nil)
+				secret := createTestSecret(1, 1, "test-secret")
+				share := createTestShare(1, 1, 2, "read", false)
+				
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
+				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{share}, nil)
 			},
 			expectedPermission: PermissionRead,
 			expectedSource:     "direct_share",
@@ -69,21 +98,11 @@ func TestCheckSecretPermission(t *testing.T) {
 			userID:             2,
 			requiredPermission: PermissionWrite,
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 1,
-					Name:    "test-secret",
-				}, nil)
-				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{
-					{
-						ID:          1,
-						SecretID:    1,
-						RecipientID: 2,
-						IsGroup:     false,
-						Permission:  "read",
-						CreatedAt:   time.Now(),
-					},
-				}, nil)
+				secret := createTestSecret(1, 1, "test-secret")
+				share := createTestShare(1, 1, 2, "read", false)
+				
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
+				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{share}, nil)
 				ms.On("GetUserGroups", mock.Anything, uint(2)).Return([]*models.Group{}, nil)
 			},
 			expectError: true,
@@ -94,27 +113,13 @@ func TestCheckSecretPermission(t *testing.T) {
 			userID:             3,
 			requiredPermission: PermissionWrite,
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 1,
-					Name:    "test-secret",
-				}, nil)
-				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{
-					{
-						ID:          2,
-						SecretID:    1,
-						RecipientID: 10, // Group ID
-						IsGroup:     true,
-						Permission:  "write",
-						CreatedAt:   time.Now(),
-					},
-				}, nil)
-				ms.On("GetUserGroups", mock.Anything, uint(3)).Return([]*models.Group{
-					{
-						ID:   10,
-						Name: "test-group",
-					},
-				}, nil)
+				secret := createTestSecret(1, 1, "test-secret")
+				groupShare := createTestShare(2, 1, 10, "write", true)
+				group := createTestGroup(10, "test-group")
+				
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
+				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{groupShare}, nil)
+				ms.On("GetUserGroups", mock.Anything, uint(3)).Return([]*models.Group{group}, nil)
 			},
 			expectedPermission: PermissionWrite,
 			expectedSource:     "group_share",
@@ -126,11 +131,9 @@ func TestCheckSecretPermission(t *testing.T) {
 			userID:             4,
 			requiredPermission: PermissionRead,
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 1,
-					Name:    "test-secret",
-				}, nil)
+				secret := createTestSecret(1, 1, "test-secret")
+				
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
 				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{}, nil)
 				ms.On("GetUserGroups", mock.Anything, uint(4)).Return([]*models.Group{}, nil)
 			},
@@ -143,9 +146,7 @@ func TestCheckSecretPermission(t *testing.T) {
 			mockStorage := &MockStorage{}
 			tt.setupMocks(mockStorage)
 
-			core := &SecretlyCore{
-				storage: mockStorage,
-			}
+			core := NewSecretlyCore(mockStorage)
 
 			ctx := context.Background()
 			permCtx, err := core.CheckSecretPermission(ctx, tt.secretID, tt.userID, tt.requiredPermission)
@@ -193,6 +194,16 @@ func TestHasRequiredPermission(t *testing.T) {
 }
 
 func TestEnforceSecretReadPermission(t *testing.T) {
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
 	mockStorage := &MockStorage{}
 	mockStorage.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
 		ID:      1,
@@ -200,9 +211,7 @@ func TestEnforceSecretReadPermission(t *testing.T) {
 		Name:    "test-secret",
 	}, nil)
 
-	core := &SecretlyCore{
-		storage: mockStorage,
-	}
+	core := NewSecretlyCore(mockStorage)
 
 	ctx := context.Background()
 	permCtx, err := core.EnforceSecretReadPermission(ctx, 1, 1)
@@ -216,6 +225,16 @@ func TestEnforceSecretReadPermission(t *testing.T) {
 }
 
 func TestEnforceSecretWritePermission(t *testing.T) {
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
 	mockStorage := &MockStorage{}
 	mockStorage.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
 		ID:      1,
@@ -234,9 +253,7 @@ func TestEnforceSecretWritePermission(t *testing.T) {
 	}, nil)
 	mockStorage.On("GetUserGroups", mock.Anything, uint(1)).Return([]*models.Group{}, nil)
 
-	core := &SecretlyCore{
-		storage: mockStorage,
-	}
+	core := NewSecretlyCore(mockStorage)
 
 	ctx := context.Background()
 	permCtx, err := core.EnforceSecretWritePermission(ctx, 1, 1)
@@ -248,6 +265,37 @@ func TestEnforceSecretWritePermission(t *testing.T) {
 }
 
 func TestCanUserModifySecret(t *testing.T) {
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
+	// Helper function to create test secret
+	createTestSecret := func(id, ownerID uint, name string) *models.SecretNode {
+		return &models.SecretNode{
+			ID:      id,
+			OwnerID: ownerID,
+			Name:    name,
+		}
+	}
+
+	// Helper function to create test share
+	createTestShare := func(id, secretID, recipientID uint, permission string) *models.ShareRecord {
+		return &models.ShareRecord{
+			ID:          id,
+			SecretID:    secretID,
+			RecipientID: recipientID,
+			IsGroup:     false,
+			Permission:  permission,
+			CreatedAt:   time.Now(),
+		}
+	}
+
 	tests := []struct {
 		name       string
 		setupMocks func(*MockStorage)
@@ -256,53 +304,30 @@ func TestCanUserModifySecret(t *testing.T) {
 		{
 			name: "Owner can modify",
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 1,
-					Name:    "test-secret",
-				}, nil)
+				secret := createTestSecret(1, 1, "test-secret")
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
 			},
 			expected: true,
 		},
 		{
 			name: "User with write permission can modify",
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 2,
-					Name:    "test-secret",
-				}, nil)
-				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{
-					{
-						ID:          1,
-						SecretID:    1,
-						RecipientID: 1,
-						IsGroup:     false,
-						Permission:  "write",
-						CreatedAt:   time.Now(),
-					},
-				}, nil)
+				secret := createTestSecret(1, 2, "test-secret")
+				share := createTestShare(1, 1, 1, "write")
+				
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
+				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{share}, nil)
 			},
 			expected: true,
 		},
 		{
 			name: "User with read permission cannot modify",
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 2,
-					Name:    "test-secret",
-				}, nil)
-				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{
-					{
-						ID:          1,
-						SecretID:    1,
-						RecipientID: 1,
-						IsGroup:     false,
-						Permission:  "read",
-						CreatedAt:   time.Now(),
-					},
-				}, nil)
+				secret := createTestSecret(1, 2, "test-secret")
+				share := createTestShare(1, 1, 1, "read")
+				
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
+				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{share}, nil)
 				ms.On("GetUserGroups", mock.Anything, uint(1)).Return([]*models.Group{}, nil)
 			},
 			expected: false,
@@ -314,9 +339,7 @@ func TestCanUserModifySecret(t *testing.T) {
 			mockStorage := &MockStorage{}
 			tt.setupMocks(mockStorage)
 
-			core := &SecretlyCore{
-				storage: mockStorage,
-			}
+			core := NewSecretlyCore(mockStorage)
 
 			ctx := context.Background()
 			canModify, err := core.CanUserModifySecret(ctx, 1, 1)
@@ -330,6 +353,37 @@ func TestCanUserModifySecret(t *testing.T) {
 }
 
 func TestCanUserShareSecret(t *testing.T) {
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
+	// Helper function to create test secret
+	createTestSecret := func(id, ownerID uint, name string) *models.SecretNode {
+		return &models.SecretNode{
+			ID:      id,
+			OwnerID: ownerID,
+			Name:    name,
+		}
+	}
+
+	// Helper function to create test share
+	createTestShare := func(id, secretID, recipientID uint, permission string) *models.ShareRecord {
+		return &models.ShareRecord{
+			ID:          id,
+			SecretID:    secretID,
+			RecipientID: recipientID,
+			IsGroup:     false,
+			Permission:  permission,
+			CreatedAt:   time.Now(),
+		}
+	}
+
 	tests := []struct {
 		name       string
 		setupMocks func(*MockStorage)
@@ -338,32 +392,19 @@ func TestCanUserShareSecret(t *testing.T) {
 		{
 			name: "Owner can share",
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 1,
-					Name:    "test-secret",
-				}, nil)
+				secret := createTestSecret(1, 1, "test-secret")
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
 			},
 			expected: true,
 		},
 		{
 			name: "Non-owner cannot share",
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 2,
-					Name:    "test-secret",
-				}, nil)
-				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{
-					{
-						ID:          1,
-						SecretID:    1,
-						RecipientID: 1,
-						IsGroup:     false,
-						Permission:  "write",
-						CreatedAt:   time.Now(),
-					},
-				}, nil)
+				secret := createTestSecret(1, 2, "test-secret")
+				share := createTestShare(1, 1, 1, "write")
+				
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
+				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{share}, nil)
 				ms.On("GetUserGroups", mock.Anything, uint(1)).Return([]*models.Group{}, nil)
 			},
 			expected: false,
@@ -375,9 +416,7 @@ func TestCanUserShareSecret(t *testing.T) {
 			mockStorage := &MockStorage{}
 			tt.setupMocks(mockStorage)
 
-			core := &SecretlyCore{
-				storage: mockStorage,
-			}
+			core := NewSecretlyCore(mockStorage)
 
 			ctx := context.Background()
 			canShare, err := core.CanUserShareSecret(ctx, 1, 1)
@@ -391,6 +430,37 @@ func TestCanUserShareSecret(t *testing.T) {
 }
 
 func TestGetEffectivePermission(t *testing.T) {
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
+	// Helper function to create test secret
+	createTestSecret := func(id, ownerID uint, name string) *models.SecretNode {
+		return &models.SecretNode{
+			ID:      id,
+			OwnerID: ownerID,
+			Name:    name,
+		}
+	}
+
+	// Helper function to create test share
+	createTestShare := func(id, secretID, recipientID uint, permission string) *models.ShareRecord {
+		return &models.ShareRecord{
+			ID:          id,
+			SecretID:    secretID,
+			RecipientID: recipientID,
+			IsGroup:     false,
+			Permission:  permission,
+			CreatedAt:   time.Now(),
+		}
+	}
+
 	tests := []struct {
 		name               string
 		setupMocks         func(*MockStorage)
@@ -399,43 +469,28 @@ func TestGetEffectivePermission(t *testing.T) {
 		{
 			name: "Owner has owner permission",
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 1,
-					Name:    "test-secret",
-				}, nil)
+				secret := createTestSecret(1, 1, "test-secret")
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
 			},
 			expectedPermission: PermissionOwner,
 		},
 		{
 			name: "User with write permission",
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 2,
-					Name:    "test-secret",
-				}, nil)
-				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{
-					{
-						ID:          1,
-						SecretID:    1,
-						RecipientID: 1,
-						IsGroup:     false,
-						Permission:  "write",
-						CreatedAt:   time.Now(),
-					},
-				}, nil)
+				secret := createTestSecret(1, 2, "test-secret")
+				share := createTestShare(1, 1, 1, "write")
+				
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
+				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{share}, nil)
 			},
 			expectedPermission: PermissionWrite,
 		},
 		{
 			name: "User with no access",
 			setupMocks: func(ms *MockStorage) {
-				ms.On("GetSecret", mock.Anything, uint(1)).Return(&models.SecretNode{
-					ID:      1,
-					OwnerID: 2,
-					Name:    "test-secret",
-				}, nil)
+				secret := createTestSecret(1, 2, "test-secret")
+				
+				ms.On("GetSecret", mock.Anything, uint(1)).Return(secret, nil)
 				ms.On("ListSharesBySecret", mock.Anything, uint(1)).Return([]*models.ShareRecord{}, nil)
 				ms.On("GetUserGroups", mock.Anything, uint(1)).Return([]*models.Group{}, nil)
 			},
@@ -448,9 +503,7 @@ func TestGetEffectivePermission(t *testing.T) {
 			mockStorage := &MockStorage{}
 			tt.setupMocks(mockStorage)
 
-			core := &SecretlyCore{
-				storage: mockStorage,
-			}
+			core := NewSecretlyCore(mockStorage)
 
 			ctx := context.Background()
 			permission, err := core.GetEffectivePermission(ctx, 1, 1)
@@ -464,9 +517,18 @@ func TestGetEffectivePermission(t *testing.T) {
 }
 
 func TestCheckGroupPermissions(t *testing.T) {
-	core := &SecretlyCore{}
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
 	mockStorage := &MockStorage{}
-	core.storage = mockStorage
+	core := NewSecretlyCore(mockStorage)
 
 	// Setup user groups
 	mockStorage.On("GetUserGroups", mock.Anything, uint(1)).Return([]*models.Group{
@@ -499,7 +561,7 @@ func TestCheckGroupPermissions(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	permission, shareID, err := core.checkGroupPermissions(ctx, 1, 1, shares)
+	permission, shareID, err := core.CheckGroupPermissions(ctx, 1, 1, shares)
 
 	assert.NoError(t, err)
 	assert.Equal(t, PermissionWrite, permission) // Should get highest permission (write)

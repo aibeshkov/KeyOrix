@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/secretlyhq/secretly/internal/config"
+	"github.com/secretlyhq/secretly/internal/i18n"
 	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -13,6 +15,16 @@ import (
 )
 
 func TestSecretlyCore_ShareSecretWithGroup(t *testing.T) {
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
 	// Setup
 	mockStorage := new(MockStorage)
 	mockTime := time.Date(2025, 7, 1, 12, 0, 0, 0, time.UTC)
@@ -60,6 +72,16 @@ func TestSecretlyCore_ShareSecretWithGroup(t *testing.T) {
 }
 
 func TestSecretlyCore_ShareSecretWithGroup_ValidationError(t *testing.T) {
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
 	// Setup
 	mockStorage := new(MockStorage)
 	core := &SecretlyCore{
@@ -184,6 +206,16 @@ func TestSecretlyCore_ListGroupShares(t *testing.T) {
 }
 
 func TestSecretlyCore_ListGroupShares_ValidationError(t *testing.T) {
+	// Initialize i18n for tests
+	cfg := &config.Config{
+		Locale: config.LocaleConfig{
+			Language:         "en",
+			FallbackLanguage: "en",
+		},
+	}
+	err := i18n.Initialize(cfg)
+	require.NoError(t, err)
+
 	// Setup
 	mockStorage := new(MockStorage)
 	core := &SecretlyCore{
@@ -192,7 +224,7 @@ func TestSecretlyCore_ListGroupShares_ValidationError(t *testing.T) {
 	ctx := context.Background()
 
 	// Execute
-	_, err := core.ListGroupShares(ctx, 0)
+	_, err = core.ListGroupShares(ctx, 0)
 
 	// Assert
 	assert.Error(t, err)

@@ -24,13 +24,13 @@ func ValidateShareRecord(share *ShareRecord) error {
 		return errors.New("recipient ID is required")
 	}
 
-	if share.Permission != "read" && share.Permission != "write" {
-		return fmt.Errorf("invalid permission: %s (must be 'read' or 'write')", share.Permission)
-	}
-
 	// Set default values if not provided
 	if share.Permission == "" {
 		share.Permission = "read"
+	}
+
+	if share.Permission != "read" && share.Permission != "write" {
+		return fmt.Errorf("invalid permission: %s (must be 'read' or 'write')", share.Permission)
 	}
 
 	if share.CreatedAt.IsZero() {

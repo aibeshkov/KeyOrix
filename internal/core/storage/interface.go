@@ -41,6 +41,7 @@ type Storage interface {
 	UpdateUser(ctx context.Context, user *models.User) (*models.User, error)
 	DeleteUser(ctx context.Context, id uint) error
 	ListUsers(ctx context.Context, filter *UserFilter) ([]*models.User, int64, error)
+	GetUserGroups(ctx context.Context, userID uint) ([]*models.Group, error)
 
 	// Role Management
 	CreateRole(ctx context.Context, role *models.Role) (*models.Role, error)

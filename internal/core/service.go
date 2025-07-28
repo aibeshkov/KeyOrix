@@ -822,7 +822,7 @@ func (c *SecretlyCore) CheckSecretPermission(ctx context.Context, secretID, user
 	}
 
 	// Check group shares
-	groupPermission, shareID, err := c.checkGroupPermissions(ctx, secretID, userID, shares)
+	groupPermission, shareID, err := c.CheckGroupPermissions(ctx, secretID, userID, shares)
 	if err == nil && groupPermission != PermissionNone {
 		if c.hasRequiredPermission(groupPermission, requiredPermission) {
 			return &PermissionContext{
@@ -861,11 +861,13 @@ func (c *SecretlyCore) hasRequiredPermission(userPermission, requiredPermission 
 	return userLevel >= requiredLevel
 }
 
-// checkGroupPermissions checks if a user has permission through group membership
-func (c *SecretlyCore) checkGroupPermissions(ctx context.Context, secretID, userID uint, shares []*models.ShareRecord) (PermissionLevel, *uint, error) {
-	// TODO: Get user's groups when group functionality is available
-	// For now, skip group permission checks
-	var userGroups []*models.Group
+// CheckGroupPermissions checks if a user has permission through group membership
+func (c *SecretlyCore) CheckGroupPermissions(ctx context.Context, secretID, userID uint, shares []*models.ShareRecord) (PermissionLevel, *uint, error) {
+	// Get user's groups
+	userGroups, err := c.storage.GetUserGroups(ctx, userID)
+	if err != nil {
+		return PermissionNone, nil, err
+	}
 
 	var highestPermission PermissionLevel = PermissionNone
 	var shareID *uint
@@ -986,4 +988,15 @@ func (c *SecretlyCore) ListUserPermissions(ctx context.Context, userID uint) ([]
 	// For now, skip group permissions
 
 	return permissions, nil
+}
+
+// HealthCheck checks the health of the core service and its dependencies
+func (c *SecretlyCore) HealthCheck(ctx context.Context) error {
+	// Check storage health
+	if c.storage == nil {
+		return fmt.Errorf("storage not initialized")
+	}
+
+	// Delegate to storage health check
+	return c.storage.HealthCheck(ctx)
 }

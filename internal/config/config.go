@@ -12,6 +12,7 @@ type Config struct {
 	Locale     LocaleConfig     `yaml:"locale"`
 	Server     ServerConfig     `yaml:"server"`
 	Storage    StorageConfig    `yaml:"storage"`
+	Client     *ClientConfig    `yaml:"client,omitempty"`
 	Secrets    SecretsConfig    `yaml:"secrets"`
 	Telemetry  TelemetryConfig  `yaml:"telemetry"`
 	Security   SecurityConfig   `yaml:"security"`
@@ -55,7 +56,9 @@ type RateLimitConfig struct {
 }
 
 type StorageConfig struct {
+	Type       string           `yaml:"type"`       // "local" or "remote"
 	Database   DatabaseConfig   `yaml:"database"`
+	Remote     *RemoteConfig    `yaml:"remote,omitempty"`
 	Encryption EncryptionConfig `yaml:"encryption"`
 }
 
@@ -63,6 +66,25 @@ type DatabaseConfig struct {
 	Path         string `yaml:"path"`
 	MaxOpenConns int    `yaml:"max_open_conns"`
 	MaxIdleConns int    `yaml:"max_idle_conns"`
+}
+
+type RemoteConfig struct {
+	BaseURL        string `yaml:"base_url"`
+	APIKey         string `yaml:"api_key"`
+	TimeoutSeconds int    `yaml:"timeout_seconds"`
+	RetryAttempts  int    `yaml:"retry_attempts"`
+	TLSVerify      bool   `yaml:"tls_verify"`
+}
+
+type ClientConfig struct {
+	Endpoint string     `yaml:"endpoint"`
+	Auth     AuthConfig `yaml:"auth"`
+	Timeout  string     `yaml:"timeout"`
+}
+
+type AuthConfig struct {
+	Type   string `yaml:"type"`   // "none", "api_key"
+	APIKey string `yaml:"api_key"`
 }
 
 type EncryptionConfig struct {
@@ -192,6 +214,23 @@ func (c *Config) Validate() error {
 	}
 	if !supportedLanguages[c.Locale.FallbackLanguage] {
 		return fmt.Errorf("unsupported fallback language: %s. Supported languages: en, ru, es, fr, de", c.Locale.FallbackLanguage)
+	}
+
+	return nil
+}
+// Save saves the configuration to a YAML file
+func Save(path string, cfg *Config) error {
+	if path == "" {
+		path = filepath.Join(appRootDir, "secretly.yaml")
+	}
+
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	if err := securefiles.SecureWriteFile(appRootDir, path, data, 0600); err != nil {
+		return fmt.Errorf("failed to write config file %q: %w", path, err)
 	}
 
 	return nil

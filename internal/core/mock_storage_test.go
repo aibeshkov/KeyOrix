@@ -204,6 +204,14 @@ func (m *MockStorage) ListUsers(ctx context.Context, filter *storage.UserFilter)
 	return args.Get(0).([]*models.User), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *MockStorage) GetUserGroups(ctx context.Context, userID uint) ([]*models.Group, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.Group), args.Error(1)
+}
+
 // Role Management
 
 func (m *MockStorage) CreateRole(ctx context.Context, role *models.Role) (*models.Role, error) {

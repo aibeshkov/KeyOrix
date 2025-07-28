@@ -13,14 +13,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/secretlyhq/secretly/internal/config"
+	"github.com/secretlyhq/secretly/internal/cli"
 	"github.com/secretlyhq/secretly/internal/core"
-	"github.com/secretlyhq/secretly/internal/storage/local"
-	"github.com/secretlyhq/secretly/internal/storage/models"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 var (
@@ -56,23 +52,11 @@ func init() {
 }
 
 func runCreate(cmd *cobra.Command, args []string) error {
-	cfg, err := config.Load("secretly.yaml")
+	// Initialize core service using storage factory
+	service, err := cli.InitializeCoreService()
 	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
+		return fmt.Errorf("failed to initialize service: %w", err)
 	}
-
-	db, err := gorm.Open(sqlite.Open(cfg.Storage.Database.Path), &gorm.Config{})
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	// Auto-migrate models (ensure tables exist)
-	if err := db.AutoMigrate(&models.SecretNode{}, &models.SecretVersion{}); err != nil {
-		return fmt.Errorf("failed to migrate database: %w", err)
-	}
-
-	storage := local.NewLocalStorage(db)
-	service := core.NewSecretlyCore(storage)
 
 	var req *core.CreateSecretRequest
 	if createInteractive {
