@@ -1,7 +1,8 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../constants';
+import { getPostLoginRedirect } from '../../utils/routing';
 
 interface PublicRouteProps {
     children: React.ReactNode;
@@ -13,7 +14,7 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({
     redirectTo = ROUTES.DASHBOARD,
 }) => {
     const { isAuthenticated, isLoading } = useAuth();
-    const location = useLocation();
+    // const location = useLocation(); // Not needed for current implementation
 
     // Show loading while checking authentication
     if (isLoading) {
@@ -29,9 +30,9 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({
 
     // Redirect to dashboard if already authenticated
     if (isAuthenticated) {
-        // Check if there's a redirect location from login attempt
-        const from = (location.state as any)?.from?.pathname || redirectTo;
-        return <Navigate to={from} replace />;
+        // Check if there's an intended route to redirect to
+        const redirectPath = getPostLoginRedirect(redirectTo);
+        return <Navigate to={redirectPath} replace />;
     }
 
     return <>{children}</>;

@@ -1,42 +1,19 @@
 import '@testing-library/jest-dom';
-import { vi, beforeEach, afterEach } from 'vitest';
-import { setupMocks, cleanupMocks } from './mocks';
-
-// Mock environment variables
-Object.defineProperty(import.meta, 'env', {
-  value: {
-    MODE: 'test',
-    DEV: false,
-    PROD: false,
-    SSR: false,
-    VITE_API_BASE_URL: 'http://localhost:8080',
-  },
-  writable: true,
-});
+import { vi } from 'vitest';
 
 // Mock IntersectionObserver
-Object.defineProperty(globalThis, 'IntersectionObserver', {
-  writable: true,
-  configurable: true,
-  value: class IntersectionObserver {
-    constructor() { }
-    disconnect() { }
-    observe() { }
-    unobserve() { }
-  },
-});
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
 
 // Mock ResizeObserver
-Object.defineProperty(globalThis, 'ResizeObserver', {
-  writable: true,
-  configurable: true,
-  value: class ResizeObserver {
-    constructor() { }
-    disconnect() { }
-    observe() { }
-    unobserve() { }
-  },
-});
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -45,30 +22,65 @@ Object.defineProperty(window, 'matchMedia', {
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
 });
 
-// Mock URL.createObjectURL and URL.revokeObjectURL
-Object.defineProperty(URL, 'createObjectURL', {
-  writable: true,
-  value: vi.fn().mockReturnValue('mock-object-url'),
+// Mock clipboard API
+Object.defineProperty(navigator, 'clipboard', {
+  value: {
+    writeText: vi.fn().mockResolvedValue(undefined),
+    readText: vi.fn().mockResolvedValue(''),
+  },
 });
 
-Object.defineProperty(URL, 'revokeObjectURL', {
-  writable: true,
-  value: vi.fn(),
+// Mock crypto API
+Object.defineProperty(global, 'crypto', {
+  value: {
+    randomUUID: vi.fn(() => 'mock-uuid'),
+    getRandomValues: vi.fn((arr) => arr.map(() => Math.floor(Math.random() * 256))),
+  },
 });
 
-// Setup and cleanup for each test
-beforeEach(() => {
-  setupMocks();
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+// Mock sessionStorage
+const sessionStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
+
+// Mock fetch
+global.fetch = vi.fn();
+
+// Console error suppression for tests
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args: any[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Warning: ReactDOM.render is no longer supported')
+    ) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
 });
 
-afterEach(() => {
-  cleanupMocks();
+afterAll(() => {
+  console.error = originalError;
 });

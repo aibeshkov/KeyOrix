@@ -2,12 +2,14 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../constants';
+import { storeIntendedRoute } from '../../utils/routing';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
     requiredPermissions?: string[];
     requiredRole?: string;
     fallbackPath?: string;
+    redirectOnFailure?: boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
@@ -15,6 +17,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     requiredPermissions = [],
     requiredRole,
     fallbackPath = ROUTES.LOGIN,
+    redirectOnFailure = true,
 }) => {
     const { isAuthenticated, isLoading, user, hasPermission } = useAuth();
     const location = useLocation();
@@ -33,6 +36,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
+        // Store the intended route for redirect after login
+        storeIntendedRoute(location.pathname + location.search);
+
         return (
             <Navigate
                 to={fallbackPath}
@@ -44,12 +50,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
     // Check role requirement
     if (requiredRole && user?.role !== requiredRole) {
-        return (
-            <Navigate
-                to={ROUTES.DASHBOARD}
-                replace
-            />
-        );
+        if (redirectOnFailure) {
+            return (
+                <Navigate
+                    to={ROUTES.DASHBOARD}
+                    replace
+                />
+            );
+        } else {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="text-center">
+                        <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+                        <p className="text-gray-600 mb-4">You don't have permission to access this page.</p>
+                        <p className="text-sm text-gray-500">Required role: {requiredRole}</p>
+                    </div>
+                </div>
+            );
+        }
     }
 
     // Check permission requirements
@@ -59,12 +77,28 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         );
 
         if (!hasAllPermissions) {
-            return (
-                <Navigate
-                    to={ROUTES.DASHBOARD}
-                    replace
-                />
-            );
+            if (redirectOnFailure) {
+                return (
+                    <Navigate
+                        to={ROUTES.DASHBOARD}
+                        replace
+                    />
+                );
+            } else {
+                const missingPermissions = requiredPermissions.filter(permission =>
+                    !hasPermission(permission)
+                );
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                        <div className="text-center">
+                            <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+                            <p className="text-gray-600 mb-4">You don't have permission to access this page.</p>
+                            <p className="text-sm text-gray-500">Missing permissions: {missingPermissions.join(', ')}</p>
+                        </div>
+                    </div>
+                );
+            }
         }
     }
 

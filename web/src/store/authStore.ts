@@ -2,7 +2,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthState, User, LoginFormData } from '../types';
 import { authService } from '../services/auth';
-import { storage } from '../utils';
+import {
+    persistAuthData,
+    clearPersistedAuthData,
+    getCurrentAuthState,
+    updateTokenExpiry,
+    isTokenValid,
+    getTimeUntilExpiry
+} from '../utils/auth';
 
 interface AuthStore extends AuthState {
     // Actions
@@ -41,8 +48,13 @@ export const useAuthStore = create<AuthStore>()(
                         error: null,
                     });
 
-                    // Store token expiration for refresh logic
-                    storage.set('tokenExpiresAt', response.expiresAt);
+                    // Persist authentication data
+                    persistAuthData({
+                        user: response.user,
+                        token: response.token,
+                        expiresAt: response.expiresAt,
+                        rememberMe: credentials.rememberMe,
+                    });
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Login failed';
                     set({
@@ -74,8 +86,7 @@ export const useAuthStore = create<AuthStore>()(
                     });
 
                     // Clear stored data
-                    storage.remove('tokenExpiresAt');
-                    storage.remove('auth-storage');
+                    clearPersistedAuthData();
                 }
             },
 
@@ -89,7 +100,7 @@ export const useAuthStore = create<AuthStore>()(
                     });
 
                     // Update token expiration
-                    storage.set('tokenExpiresAt', response.expiresAt);
+                    updateTokenExpiry(response.expiresAt);
                 } catch (error) {
                     // If refresh fails, logout user
                     await get().logout();
@@ -101,6 +112,22 @@ export const useAuthStore = create<AuthStore>()(
                 set({ isLoading: true });
 
                 try {
+                    // First check if we have valid persisted data
+                    const currentState = getCurrentAuthState();
+
+                    if (currentState.isAuthenticated && isTokenValid()) {
+                        // We have valid persisted data, use it
+                        set({
+                            user: currentState.user,
+                            token: currentState.token,
+                            isAuthenticated: true,
+                            isLoading: false,
+                            error: null,
+                        });
+                        return;
+                    }
+
+                    // If no valid persisted data, check with server
                     const user = await authService.checkAuth();
 
                     if (user) {
@@ -111,6 +138,8 @@ export const useAuthStore = create<AuthStore>()(
                             error: null,
                         });
                     } else {
+                        // Clear any invalid persisted data
+                        clearPersistedAuthData();
                         set({
                             user: null,
                             token: null,
@@ -120,6 +149,8 @@ export const useAuthStore = create<AuthStore>()(
                         });
                     }
                 } catch (error) {
+                    // Clear any invalid persisted data
+                    clearPersistedAuthData();
                     set({
                         user: null,
                         token: null,
@@ -159,24 +190,13 @@ export const useAuthStore = create<AuthStore>()(
 
 // Helper function to check if token needs refresh
 export const shouldRefreshToken = (): boolean => {
-    const expiresAt = storage.get<string>('tokenExpiresAt');
-    if (!expiresAt) return false;
+    const timeUntilExpiry = getTimeUntilExpiry();
+    const fiveMinutes = 5 * 60 * 1000;
 
-    const expirationTime = new Date(expiresAt).getTime();
-    const currentTime = Date.now();
-    const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
-
-    // Refresh if token expires in less than 5 minutes
-    return expirationTime - currentTime < fiveMinutes;
+    return timeUntilExpiry > 0 && timeUntilExpiry < fiveMinutes;
 };
 
 // Helper function to check if token is expired
 export const isTokenExpired = (): boolean => {
-    const expiresAt = storage.get<string>('tokenExpiresAt');
-    if (!expiresAt) return true;
-
-    const expirationTime = new Date(expiresAt).getTime();
-    const currentTime = Date.now();
-
-    return currentTime >= expirationTime;
+    return !isTokenValid();
 };

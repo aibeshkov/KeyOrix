@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useAuthStore, shouldRefreshToken, isTokenExpired } from '../store/authStore';
 import { getEnvConfig } from '../utils';
+import { shouldRestoreSession } from '../utils/auth';
 
 const config = getEnvConfig();
 
@@ -42,7 +43,7 @@ export const useAuth = () => {
 
     // Check authentication status on mount and set up refresh interval
     useEffect(() => {
-        let refreshInterval: NodeJS.Timeout;
+        let refreshInterval: ReturnType<typeof setInterval>;
 
         const initAuth = async () => {
             if (isAuthenticated && token) {
@@ -51,8 +52,11 @@ export const useAuth = () => {
 
                 // Set up periodic token refresh check
                 refreshInterval = setInterval(handleTokenRefresh, 60000); // Check every minute
-            } else {
+            } else if (shouldRestoreSession()) {
                 // Try to restore session from stored data
+                await checkAuth();
+            } else {
+                // No valid session to restore, ensure we're in logged out state
                 await checkAuth();
             }
         };
@@ -68,7 +72,7 @@ export const useAuth = () => {
 
     // Session timeout handling
     useEffect(() => {
-        let timeoutId: NodeJS.Timeout;
+        let timeoutId: ReturnType<typeof setTimeout>;
 
         if (isAuthenticated) {
             const handleSessionTimeout = () => {
@@ -99,6 +103,8 @@ export const useAuth = () => {
                 });
             };
         }
+
+        return () => { }; // Return empty cleanup function if not authenticated
     }, [isAuthenticated, logout, setError]);
 
     return {

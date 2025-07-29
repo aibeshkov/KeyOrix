@@ -212,3 +212,8 @@ export const url = {
         return result;
     },
 };
+
+// Re-export auth utilities
+export * from './auth';
+// Re-export routing utilities  
+export * from './routing';

@@ -1,8 +1,49 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { useAuthStore, shouldRefreshToken, isTokenExpired } from '../store/authStore';
 import { getEnvConfig } from '../utils';
+import {
+    ApiResponse,
+    PaginatedResponse,
+    Secret,
+    SecretFormData,
+    ShareRecord,
+    ShareFormData,
+    User,
+    Recipient,
+    DashboardStats,
+    ActivityItem
+} from '../types';
+import { API_ENDPOINTS } from '../constants';
 
 const config = getEnvConfig();
+
+// Request/Response logging utility
+const logRequest = (config: AxiosRequestConfig) => {
+    if (getEnvConfig().ENABLE_DEBUG) {
+        console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
+            headers: config.headers,
+            data: config.data,
+        });
+    }
+};
+
+const logResponse = (response: AxiosResponse) => {
+    if (getEnvConfig().ENABLE_DEBUG) {
+        console.log(`[API Response] ${response.status} ${response.config.url}`, {
+            data: response.data,
+            headers: response.headers,
+        });
+    }
+};
+
+const logError = (error: AxiosError) => {
+    console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+    });
+};
 
 // Create main API client
 export const apiClient: AxiosInstance = axios.create({
@@ -14,9 +55,12 @@ export const apiClient: AxiosInstance = axios.create({
     },
 });
 
-// Request interceptor for authentication
+// Request interceptor for authentication and logging
 apiClient.interceptors.request.use(
     async (config) => {
+        // Log request in debug mode
+        logRequest(config);
+
         const authStore = useAuthStore.getState();
 
         // Skip auth for login/refresh endpoints
@@ -47,19 +91,28 @@ apiClient.interceptors.request.use(
             }
         }
 
+        // Add request ID for tracking
+        config.headers['X-Request-ID'] = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
         return config;
     },
     (error) => {
+        logError(error);
         return Promise.reject(error);
     }
 );
 
-// Response interceptor for error handling
+// Response interceptor for logging and error handling
 apiClient.interceptors.response.use(
     (response: AxiosResponse) => {
+        // Log response in debug mode
+        logResponse(response);
         return response;
     },
     async (error: AxiosError) => {
+        // Log error
+        logError(error);
+
         const authStore = useAuthStore.getState();
 
         if (error.response?.status === 401) {
@@ -92,7 +145,10 @@ apiClient.interceptors.response.use(
         } else if (error.response?.status === 403) {
             // Forbidden - user doesn't have permission
             authStore.setError('You do not have permission to perform this action.');
-        } else if (error.response?.status >= 500) {
+        } else if (error.response?.status === 429) {
+            // Rate limiting
+            authStore.setError('Too many requests. Please wait a moment and try again.');
+        } else if (error.response?.status && error.response.status >= 500) {
             // Server error
             authStore.setError('Server error. Please try again later.');
         } else if (error.code === 'ECONNABORTED') {
@@ -138,6 +194,236 @@ export const handleApiError = (error: unknown): string => {
     }
 
     return 'An unexpected error occurred';
+};
+
+// Typed API service methods
+export const apiService = {
+    // Secret management
+    secrets: {
+        async list(params?: {
+            page?: number;
+            pageSize?: number;
+            search?: string;
+            type?: string;
+            namespace?: string;
+            zone?: string;
+            environment?: string;
+            tags?: string[];
+        }): Promise<PaginatedResponse<Secret>> {
+            const response = await apiClient.get<ApiResponse<PaginatedResponse<Secret>>>(
+                API_ENDPOINTS.SECRETS.LIST,
+                { params }
+            );
+            return response.data.data;
+        },
+
+        async get(id: number): Promise<Secret> {
+            const response = await apiClient.get<ApiResponse<Secret>>(
+                API_ENDPOINTS.SECRETS.GET(id)
+            );
+            return response.data.data;
+        },
+
+        async create(data: SecretFormData): Promise<Secret> {
+            const response = await apiClient.post<ApiResponse<Secret>>(
+                API_ENDPOINTS.SECRETS.CREATE,
+                data
+            );
+            return response.data.data;
+        },
+
+        async update(id: number, data: Partial<SecretFormData>): Promise<Secret> {
+            const response = await apiClient.put<ApiResponse<Secret>>(
+                API_ENDPOINTS.SECRETS.UPDATE(id),
+                data
+            );
+            return response.data.data;
+        },
+
+        async delete(id: number): Promise<void> {
+            await apiClient.delete(API_ENDPOINTS.SECRETS.DELETE(id));
+        },
+
+        async getVersions(id: number): Promise<any[]> {
+            const response = await apiClient.get<ApiResponse<any[]>>(
+                API_ENDPOINTS.SECRETS.VERSIONS(id)
+            );
+            return response.data.data;
+        },
+    },
+
+    // Sharing management
+    sharing: {
+        async list(params?: {
+            page?: number;
+            pageSize?: number;
+            secretId?: number;
+            recipientType?: 'user' | 'group';
+        }): Promise<PaginatedResponse<ShareRecord>> {
+            const response = await apiClient.get<ApiResponse<PaginatedResponse<ShareRecord>>>(
+                API_ENDPOINTS.SHARING.LIST,
+                { params }
+            );
+            return response.data.data;
+        },
+
+        async get(id: number): Promise<ShareRecord> {
+            const response = await apiClient.get<ApiResponse<ShareRecord>>(
+                API_ENDPOINTS.SHARING.GET(id)
+            );
+            return response.data.data;
+        },
+
+        async create(data: ShareFormData & { secretId: number }): Promise<ShareRecord> {
+            const response = await apiClient.post<ApiResponse<ShareRecord>>(
+                API_ENDPOINTS.SHARING.CREATE,
+                data
+            );
+            return response.data.data;
+        },
+
+        async update(id: number, data: Partial<ShareFormData>): Promise<ShareRecord> {
+            const response = await apiClient.put<ApiResponse<ShareRecord>>(
+                API_ENDPOINTS.SHARING.UPDATE(id),
+                data
+            );
+            return response.data.data;
+        },
+
+        async delete(id: number): Promise<void> {
+            await apiClient.delete(API_ENDPOINTS.SHARING.DELETE(id));
+        },
+
+        async selfRemove(id: number): Promise<void> {
+            await apiClient.post(API_ENDPOINTS.SHARING.SELF_REMOVE(id));
+        },
+    },
+
+    // User management
+    users: {
+        async list(params?: {
+            page?: number;
+            pageSize?: number;
+            search?: string;
+        }): Promise<PaginatedResponse<User>> {
+            const response = await apiClient.get<ApiResponse<PaginatedResponse<User>>>(
+                API_ENDPOINTS.USERS.LIST,
+                { params }
+            );
+            return response.data.data;
+        },
+
+        async get(id: number): Promise<User> {
+            const response = await apiClient.get<ApiResponse<User>>(
+                API_ENDPOINTS.USERS.GET(id)
+            );
+            return response.data.data;
+        },
+
+        async search(query: string): Promise<Recipient[]> {
+            const response = await apiClient.get<ApiResponse<Recipient[]>>(
+                API_ENDPOINTS.USERS.SEARCH,
+                { params: { q: query } }
+            );
+            return response.data.data;
+        },
+    },
+
+    // Group management
+    groups: {
+        async list(params?: {
+            page?: number;
+            pageSize?: number;
+            search?: string;
+        }): Promise<PaginatedResponse<any>> {
+            const response = await apiClient.get<ApiResponse<PaginatedResponse<any>>>(
+                API_ENDPOINTS.GROUPS.LIST,
+                { params }
+            );
+            return response.data.data;
+        },
+
+        async get(id: number): Promise<any> {
+            const response = await apiClient.get<ApiResponse<any>>(
+                API_ENDPOINTS.GROUPS.GET(id)
+            );
+            return response.data.data;
+        },
+
+        async search(query: string): Promise<Recipient[]> {
+            const response = await apiClient.get<ApiResponse<Recipient[]>>(
+                API_ENDPOINTS.GROUPS.SEARCH,
+                { params: { q: query } }
+            );
+            return response.data.data;
+        },
+    },
+
+    // Dashboard and analytics
+    dashboard: {
+        async getStats(): Promise<DashboardStats> {
+            const response = await apiClient.get<ApiResponse<DashboardStats>>(
+                '/api/dashboard/stats'
+            );
+            return response.data.data;
+        },
+
+        async getActivity(params?: {
+            page?: number;
+            pageSize?: number;
+            type?: string;
+        }): Promise<PaginatedResponse<ActivityItem>> {
+            const response = await apiClient.get<ApiResponse<PaginatedResponse<ActivityItem>>>(
+                '/api/dashboard/activity',
+                { params }
+            );
+            return response.data.data;
+        },
+    },
+
+    // Admin endpoints
+    admin: {
+        async getStats(): Promise<any> {
+            const response = await apiClient.get<ApiResponse<any>>(
+                API_ENDPOINTS.ADMIN.STATS
+            );
+            return response.data.data;
+        },
+
+        async getUsers(params?: {
+            page?: number;
+            pageSize?: number;
+            search?: string;
+        }): Promise<PaginatedResponse<User>> {
+            const response = await apiClient.get<ApiResponse<PaginatedResponse<User>>>(
+                API_ENDPOINTS.ADMIN.USERS,
+                { params }
+            );
+            return response.data.data;
+        },
+
+        async getRoles(): Promise<any[]> {
+            const response = await apiClient.get<ApiResponse<any[]>>(
+                API_ENDPOINTS.ADMIN.ROLES
+            );
+            return response.data.data;
+        },
+
+        async getAuditLogs(params?: {
+            page?: number;
+            pageSize?: number;
+            userId?: number;
+            action?: string;
+            startDate?: string;
+            endDate?: string;
+        }): Promise<PaginatedResponse<any>> {
+            const response = await apiClient.get<ApiResponse<PaginatedResponse<any>>>(
+                API_ENDPOINTS.ADMIN.AUDIT,
+                { params }
+            );
+            return response.data.data;
+        },
+    },
 };
 
 // Export configured axios instance
