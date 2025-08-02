@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/secretlyhq/secretly/internal/cli"
+	"github.com/secretlyhq/secretly/internal/cli/common"
 	"github.com/secretlyhq/secretly/internal/core"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -53,7 +53,7 @@ func init() {
 
 func runCreate(cmd *cobra.Command, args []string) error {
 	// Initialize core service using storage factory
-	service, err := cli.InitializeCoreService()
+	service, err := common.InitializeCoreService()
 	if err != nil {
 		return fmt.Errorf("failed to initialize service: %w", err)
 	}

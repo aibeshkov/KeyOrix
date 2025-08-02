@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/secretlyhq/secretly/internal/cli"
+	"github.com/secretlyhq/secretly/internal/cli/common"
 	"github.com/secretlyhq/secretly/internal/config"
 	"github.com/spf13/cobra"
 )
@@ -59,7 +59,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	// Test connection
 	fmt.Printf("Connection:   ")
-	service, err := cli.InitializeCoreService()
+	service, err := common.InitializeCoreService()
 	if err != nil {
 		fmt.Printf("❌ Failed to initialize (%s)\n", err.Error())
 		return nil
@@ -106,7 +106,7 @@ func runPing(cmd *cobra.Command, args []string) error {
 	successCount := 0
 
 	for i := 0; i < pingCount; i++ {
-		service, err := cli.InitializeCoreService()
+		service, err := common.InitializeCoreService()
 		if err != nil {
 			fmt.Printf("Ping %d: ❌ Failed to initialize (%s)\n", i+1, err.Error())
 			continue

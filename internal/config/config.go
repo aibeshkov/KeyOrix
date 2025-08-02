@@ -9,15 +9,16 @@ import (
 )
 
 type Config struct {
-	Locale     LocaleConfig     `yaml:"locale"`
-	Server     ServerConfig     `yaml:"server"`
-	Storage    StorageConfig    `yaml:"storage"`
-	Client     *ClientConfig    `yaml:"client,omitempty"`
-	Secrets    SecretsConfig    `yaml:"secrets"`
-	Telemetry  TelemetryConfig  `yaml:"telemetry"`
-	Security   SecurityConfig   `yaml:"security"`
-	SoftDelete SoftDeleteConfig `yaml:"soft_delete"`
-	Purge      PurgeConfig      `yaml:"purge"`
+	Environment string           `yaml:"environment"` // development, staging, production
+	Locale      LocaleConfig     `yaml:"locale"`
+	Server      ServerConfig     `yaml:"server"`
+	Storage     StorageConfig    `yaml:"storage"`
+	Client      *ClientConfig    `yaml:"client,omitempty"`
+	Secrets     SecretsConfig    `yaml:"secrets"`
+	Telemetry   TelemetryConfig  `yaml:"telemetry"`
+	Security    SecurityConfig   `yaml:"security"`
+	SoftDelete  SoftDeleteConfig `yaml:"soft_delete"`
+	Purge       PurgeConfig      `yaml:"purge"`
 }
 
 type LocaleConfig struct {
@@ -38,6 +39,10 @@ type ServerInstanceConfig struct {
 	RateLimit         RateLimitConfig `yaml:"ratelimit"`
 	SwaggerEnabled    bool            `yaml:"swagger_enabled,omitempty"`
 	ReflectionEnabled bool            `yaml:"reflection_enabled,omitempty"`
+	// Web dashboard specific settings (HTTP only)
+	WebAssetsPath    string   `yaml:"web_assets_path,omitempty"`
+	AllowedOrigins   []string `yaml:"allowed_origins,omitempty"`
+	Domain           string   `yaml:"domain,omitempty"`
 }
 
 type TLSConfig struct {

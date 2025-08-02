@@ -4,7 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/secretlyhq/secretly/internal/cli/auth"
+	"github.com/secretlyhq/secretly/internal/cli/config"
+	"github.com/secretlyhq/secretly/internal/cli/connect"
+	"github.com/secretlyhq/secretly/internal/cli/encryption"
+	"github.com/secretlyhq/secretly/internal/cli/rbac"
+	"github.com/secretlyhq/secretly/internal/cli/secret"
 	"github.com/secretlyhq/secretly/internal/cli/share"
+	"github.com/secretlyhq/secretly/internal/cli/status"
+	"github.com/secretlyhq/secretly/internal/cli/system"
 	"github.com/spf13/cobra"
 )
 
@@ -15,10 +23,16 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	// Add commands
+	// Add all available commands
+	rootCmd.AddCommand(secret.SecretCmd)
 	rootCmd.AddCommand(share.ShareCmd)
-	
-	// TODO: Add other commands (secret, user, etc.)
+	rootCmd.AddCommand(auth.AuthCmd)
+	rootCmd.AddCommand(config.ConfigCmd)
+	rootCmd.AddCommand(connect.ConnectCmd)
+	rootCmd.AddCommand(encryption.EncryptionCmd)
+	rootCmd.AddCommand(rbac.RbacCmd)
+	rootCmd.AddCommand(status.StatusCmd)
+	rootCmd.AddCommand(system.SystemCmd)
 }
 
 // Execute runs the root command

@@ -1,0 +1,82 @@
+# Secretly Configuration with Web Dashboard
+# This configuration enables both the API server and web dashboard
+
+environment: "development"  # development, staging, production
+
+locale:
+  language: "en"
+  fallback_language: "en"
+
+server:
+  http:
+    enabled: true
+    port: "8080"
+    protocol_versions: ["1.1", "2.0"]
+    swagger_enabled: true
+    # Web dashboard settings
+    web_assets_path: "./web/dist"  # Path to built web assets
+    domain: "localhost"            # Domain for production CORS
+    allowed_origins:               # Additional allowed origins for CORS
+      - "http://localhost:3000"    # React dev server
+      - "http://localhost:5173"    # Vite dev server
+    tls:
+      enabled: false
+      auto_cert: false
+      cert_file: ""
+      key_file: ""
+    ratelimit:
+      enabled: true
+      requests_per_second: 100
+      burst: 200
+  grpc:
+    enabled: true
+    port: "9090"
+    protocol_versions: ["2.0"]
+    reflection_enabled: true
+    tls:
+      enabled: false
+      cert_file: ""
+      key_file: ""
+    ratelimit:
+      enabled: true
+      requests_per_second: 50
+      burst: 100
+
+storage:
+  type: "local"
+  database:
+    path: "./data/secretly.db"
+    max_open_conns: 25
+    max_idle_conns: 5
+  encryption:
+    enabled: true
+    use_kek: false
+    kek_path: ""
+    dek_path: ""
+
+secrets:
+  chunking:
+    enabled: true
+    max_chunk_size_kb: 64
+    max_chunks_per_secret: 100
+  limits:
+    max_secrets_per_user: 1000
+
+telemetry:
+  enabled: false
+  endpoint: ""
+  log_file: "./logs/telemetry.log"
+  api_key: ""
+
+security:
+  enable_file_permission_check: true
+  auto_fix_file_permissions: true
+  allow_unsafe_file_permissions: false
+
+soft_delete:
+  enabled: true
+  retention_days: 30
+
+purge:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM

@@ -1,96 +1,149 @@
-# --- Go build ---
-/bin/
-/build/
-/dist/
+# =============================================================================
+# Secretly Project - Comprehensive .gitignore
+# =============================================================================
+
+# --- Binary Executables ---
+secretly
+secretly-*
+server/secretly-server
+cmd/secretly
+cmd/secretly-server
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# --- Go Build Artifacts ---
+/bin/
+/build/
+/dist/
 *.test
 *.out
-
-# --- Go tools ---
+*.prof
+coverage.out
 *.coverprofile
 *.testresult
-coverage.out
 
-# --- Dependency vendoring ---
-/vendor/
+# --- Database Files ---
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+secretly.db
+test-secretly.db
+data/*.db
 
-# --- OS generated ---
+# --- Log Files ---
+*.log
+*.log.*
+logs/
+server/logs/
+telemetry/
+
+# --- Configuration Files (keep templates) ---
+secretly.yaml
+config.yaml
+*.local.yaml
+.env
+.env.local
+.env.development
+.env.production
+test-config.yaml
+
+# --- Security & Keys ---
+keys/
+certs/
+*.key
+*.crt
+*.pem
+*.p12
+*.pfx
+
+# --- Node.js / Web Build Artifacts ---
+node_modules/
+web/node_modules/
+web/dist/
+web/build/
+web/.next/
+web/.nuxt/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Test Artifacts ---
+test-results/
+playwright-report/
+web/playwright-report/
+web/test-results/
+coverage/
+.nyc_output/
+
+# --- Docker & Container Artifacts ---
+docker-compose.override.yml
+.dockerignore.local
+
+# --- OS Generated Files ---
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# --- Editor configs ---
-.vscode/
+# --- Editor & IDE Files ---
+.vscode/settings.json
 .idea/
 *.swp
 *.swo
+*~
+*.orig
+*.rej
 
-# --- SQLite / DB files ---
-*.sqlite
-*.db
-*.bak
-secretly.db
-
-# --- Encryption keys ---
-keys/
-*.key
-*.pem
-
-# --- Local config ---
-config.yaml
-*.local.yaml
-secretly.yaml
-
-# --- Telemetry & logs ---
-telemetry/
-*.log
-
-# --- CLI artifacts ---
-.env
-.secretly_history
-.secretly_cache
-secretly
-
-# --- CI/CD cache or outputs ---
-.cache/
-output/
-artifacts/
-
-# --- Temporary files ---
+# --- Temporary Files ---
 *.tmp
 *.temp
-*~
-*.zip
-*.tpl
+*.bak
+*.backup
+core
 
-# --- Shell scripts (internal tooling) ---
-add.sh
-apply_full_migration.sh
-buid.sh
-tree.sh
-find_linter.sh
-find_ruusian.sh
-*.sh~
-*.sh.bak
-*.sh.tmp
-
-# --- Secure audit & static analysis reports ---
-/security/
-
-# --- Task tooling state ---
-.task/
-
-# --- Go workspace files ---
+# --- Go Workspace Files ---
 go.work
 go.work.sum
 
-# --- Proto-generated binaries or test artifacts ---
-server/secretly-server
-secretly-test
+# --- Dependency Vendoring ---
+/vendor/
 
-# --- Local CLI specs and debug dirs ---
+# --- CI/CD & Build Cache ---
+.cache/
+output/
+artifacts/
+.task/
+
+# --- Development Tools ---
+.secretly_history
+.secretly_cache
+
+# --- Security Reports ---
+/security/
+*.sarif
+
+# --- Compressed Archives ---
+*.zip
+*.tar.gz
+*.tgz
+
+# --- Keep Important Files (Negative Patterns) ---
+!.gitignore
+!.gitkeep
+!*.md
+!*.yaml.tpl
+!*.example
+!Dockerfile
+!Makefile
+
+# --- Local Development ---
 .kiro/
 *.spec.json
